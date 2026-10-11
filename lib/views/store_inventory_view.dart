@@ -197,7 +197,7 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                     crossAxisCount: 3,
                     crossAxisSpacing: 18,
                     mainAxisSpacing: 18,
-                    childAspectRatio: 1.15,
+                    mainAxisExtent: 320,
                   ),
                   itemCount: items.length,
                   itemBuilder: (context, index) {

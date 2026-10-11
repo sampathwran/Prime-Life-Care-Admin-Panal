@@ -215,6 +215,8 @@ class _BookingsViewState extends State<BookingsView> {
               scrollDirection: Axis.horizontal,
               child: DataTable(
                 columnSpacing: 22,
+                dataRowMinHeight: 64,
+                dataRowMaxHeight: 84,
                 headingRowColor: WidgetStateProperty.all(AppTheme.slate50),
                 columns: const [
                   DataColumn(label: Text('CODE', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: AppTheme.slate500))),

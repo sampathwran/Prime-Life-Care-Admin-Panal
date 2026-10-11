@@ -26,10 +26,9 @@ class _ReportsSettingsViewState extends State<ReportsSettingsView> {
   Widget build(BuildContext context) {
     final provider = context.watch<AdminProvider>();
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
-      child: SingleChildScrollView(
-        child: Column(
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
@@ -343,8 +342,7 @@ class _ReportsSettingsViewState extends State<ReportsSettingsView> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildDistrictTile(String name, String shifts, String staff, MaterialColor color) {

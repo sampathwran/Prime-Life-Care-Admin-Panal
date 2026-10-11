@@ -191,7 +191,7 @@ class _StaffDirectoryViewState extends State<StaffDirectoryView> {
                     crossAxisCount: 3,
                     crossAxisSpacing: 18,
                     mainAxisSpacing: 18,
-                    childAspectRatio: 1.25,
+                    mainAxisExtent: 265,
                   ),
                   itemCount: caregivers.length,
                   itemBuilder: (context, index) {

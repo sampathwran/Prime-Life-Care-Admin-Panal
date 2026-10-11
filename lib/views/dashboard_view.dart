@@ -202,6 +202,8 @@ class DashboardView extends StatelessWidget {
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
                           columnSpacing: 24,
+                          dataRowMinHeight: 56,
+                          dataRowMaxHeight: 76,
                           headingRowColor: WidgetStateProperty.all(AppTheme.slate50),
                           columns: const [
                             DataColumn(label: Text('CODE', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: AppTheme.slate500))),

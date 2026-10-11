@@ -28,7 +28,7 @@ class _OrdersRentalsViewState extends State<OrdersRentalsView> {
       return true;
     }).toList();
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,37 +105,40 @@ class _OrdersRentalsViewState extends State<OrdersRentalsView> {
           const SizedBox(height: 20),
 
           // Orders Table
-          Expanded(
-            child: orders.isEmpty
-                ? Center(
+          orders.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40.0),
+                  child: Center(
                     child: Text(
                       'No orders matching the selected filter.',
                       style: TextStyle(color: Colors.grey.shade500),
                     ),
-                  )
-                : Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.grey.shade200),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.02),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: DataTable(
-                          columnSpacing: 20,
-                          horizontalMargin: 20,
-                          headingRowHeight: 48,
-                          dataRowMaxHeight: 78,
-                          headingRowColor: WidgetStateProperty.all(Colors.grey.shade50),
+                  ),
+                )
+              : Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.grey.shade200),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        columnSpacing: 20,
+                        horizontalMargin: 20,
+                        headingRowHeight: 48,
+                        dataRowMinHeight: 64,
+                        dataRowMaxHeight: 90,
+                        headingRowColor: WidgetStateProperty.all(Colors.grey.shade50),
                           columns: const [
                             DataColumn(label: Text('ORDER / RENTAL', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                             DataColumn(label: Text('CUSTOMER & DELIVERY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
@@ -336,7 +339,6 @@ class _OrdersRentalsViewState extends State<OrdersRentalsView> {
                       ),
                     ),
                   ),
-          ),
         ],
       ),
     );

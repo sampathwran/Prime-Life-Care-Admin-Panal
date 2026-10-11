@@ -24,7 +24,7 @@ class _ServicesManagerViewState extends State<ServicesManagerView> {
       return s.category == _selectedCategory;
     }).toList();
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,23 +96,26 @@ class _ServicesManagerViewState extends State<ServicesManagerView> {
           const SizedBox(height: 20),
 
           // Services Grid / List
-          Expanded(
-            child: services.isEmpty
-                ? Center(
+          services.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40.0),
+                  child: Center(
                     child: Text(
                       'No services found in this category.',
                       style: TextStyle(color: Colors.grey.shade500),
                     ),
-                  )
-                : ListView.separated(
-                    itemCount: services.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 20),
-                    itemBuilder: (context, index) {
-                      final service = services[index];
-                      return _buildServiceCard(context, service);
-                    },
                   ),
-          ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: services.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 20),
+                  itemBuilder: (context, index) {
+                    final service = services[index];
+                    return _buildServiceCard(context, service);
+                  },
+                ),
         ],
       ),
     );
