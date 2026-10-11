@@ -34,24 +34,27 @@ class PatientVitalsTrendChart extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '24-Hour Patient Vitals Progression Curve',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.slate900,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '24-Hour Patient Vitals Progression Curve',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.slate900,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Blood Pressure (Systolic), Blood Sugar (mg/dL), and Heart Pulse over time',
-                    style: TextStyle(fontSize: 12, color: AppTheme.slate500),
-                  ),
-                ],
+                    const SizedBox(height: 3),
+                    Text(
+                      'Blood Pressure (Systolic), Blood Sugar (mg/dL), and Heart Pulse over time',
+                      style: TextStyle(fontSize: 12, color: AppTheme.slate500),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
               Row(
                 children: [
                   _buildLegendDot('BP Systolic', const Color(0xFFF43F5E)), // Rose

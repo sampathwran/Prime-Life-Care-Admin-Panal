@@ -47,24 +47,27 @@ class _WeeklyRevenueChartState extends State<WeeklyRevenueChart> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Realized Weekly Revenue & Shift Curve',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.slate900,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Realized Weekly Revenue & Shift Curve',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.slate900,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Daily home healthcare bookings + medical equipment revenue',
-                    style: TextStyle(fontSize: 12, color: AppTheme.slate500),
-                  ),
-                ],
+                    const SizedBox(height: 3),
+                    Text(
+                      'Daily home healthcare bookings + medical equipment revenue',
+                      style: TextStyle(fontSize: 12, color: AppTheme.slate500),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(

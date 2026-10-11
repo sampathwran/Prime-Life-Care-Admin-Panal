@@ -50,90 +50,101 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
 
-          const SizedBox(width: 20),
-
-          // Live Dispatch Islandwide Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppTheme.emerald100,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppTheme.emerald500.withOpacity(0.3)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.emerald500,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                const Text(
-                  'Islandwide Dispatch Active (25 Districts)',
-                  style: TextStyle(
-                    color: AppTheme.emerald800,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           const SizedBox(width: 16),
 
-          // Date & Time
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppTheme.slate100,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.access_time_rounded, size: 14, color: AppTheme.slate600),
-                const SizedBox(width: 6),
-                Text(
-                  nowFormatted,
-                  style: const TextStyle(
-                    color: AppTheme.slate700,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
+          // Right Badges (Horizontally scrollable if screen is compact)
+          Flexible(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Live Dispatch Islandwide Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.emerald100,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppTheme.emerald500.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.emerald500,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'Islandwide Dispatch Active (25 Districts)',
+                          style: TextStyle(
+                            color: AppTheme.emerald800,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
 
-          const SizedBox(width: 16),
+                  const SizedBox(width: 12),
 
-          // Careline Phone Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppTheme.blueLight,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.2)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(Icons.phone_in_talk_rounded, size: 14, color: AppTheme.primaryBlue),
-                SizedBox(width: 6),
-                Text(
-                  '+94 11 234 5678',
-                  style: TextStyle(
-                    color: AppTheme.primaryBlue,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 11,
+                  // Date & Time
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.slate100,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.access_time_rounded, size: 14, color: AppTheme.slate600),
+                        const SizedBox(width: 6),
+                        Text(
+                          nowFormatted,
+                          style: const TextStyle(
+                            color: AppTheme.slate700,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+
+                  const SizedBox(width: 12),
+
+                  // Careline Phone Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.blueLight,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.phone_in_talk_rounded, size: 14, color: AppTheme.primaryBlue),
+                        SizedBox(width: 6),
+                        Text(
+                          '+94 11 234 5678',
+                          style: TextStyle(
+                            color: AppTheme.primaryBlue,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

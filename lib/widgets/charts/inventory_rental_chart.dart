@@ -31,24 +31,27 @@ class InventoryRentalChart extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Equipment Utilization & Stock Capacity',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.slate900,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Equipment Utilization & Stock Capacity',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.slate900,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Comparison of warehouse in-stock units vs deployed monthly rentals',
-                    style: TextStyle(fontSize: 12, color: AppTheme.slate500),
-                  ),
-                ],
+                    const SizedBox(height: 3),
+                    Text(
+                      'Comparison of warehouse in-stock units vs deployed monthly rentals',
+                      style: TextStyle(fontSize: 12, color: AppTheme.slate500),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
               Row(
                 children: [
                   _buildLegendIndicator('Warehouse Stock', AppTheme.primaryBlue),

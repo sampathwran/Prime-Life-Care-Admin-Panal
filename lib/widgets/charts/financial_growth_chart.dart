@@ -36,24 +36,27 @@ class FinancialGrowthChart extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '6-Month Financial Growth by Business Stream',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.slate900,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '6-Month Financial Growth by Business Stream',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.slate900,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Revenue scaling across Home Nursing, Equipment Sales, and Monthly Rentals (in 000s LKR)',
-                    style: TextStyle(fontSize: 12, color: AppTheme.slate500),
-                  ),
-                ],
+                    const SizedBox(height: 3),
+                    Text(
+                      'Revenue scaling across Home Nursing, Equipment Sales, and Monthly Rentals (in 000s LKR)',
+                      style: TextStyle(fontSize: 12, color: AppTheme.slate500),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
               Row(
                 children: [
                   _buildLegendDot('Home Care', AppTheme.primaryBlue),

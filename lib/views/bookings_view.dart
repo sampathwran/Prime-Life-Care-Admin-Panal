@@ -151,20 +151,23 @@ class _BookingsViewState extends State<BookingsView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Caregiver Bookings & Live Dispatch',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppTheme.slate900, letterSpacing: -0.5),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Supervise requested elder & child care duties, verify patient mobility, and assign cleared NVQ staff.',
-                    style: TextStyle(fontSize: 13, color: AppTheme.slate500),
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Caregiver Bookings & Live Dispatch',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppTheme.slate900, letterSpacing: -0.5),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Supervise requested elder & child care duties, verify patient mobility, and assign cleared NVQ staff.',
+                      style: TextStyle(fontSize: 13, color: AppTheme.slate500),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 16),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
@@ -187,18 +190,21 @@ class _BookingsViewState extends State<BookingsView> {
           const SizedBox(height: 20),
 
           // Filter Tabs
-          Row(
-            children: [
-              _buildFilterChip('all', 'All Bookings (${provider.bookings.length})'),
-              const SizedBox(width: 8),
-              _buildFilterChip('pending_review', 'Pending Dispatch (${provider.pendingDispatchesCount})'),
-              const SizedBox(width: 8),
-              _buildFilterChip('caregiver_assigned', 'Caregiver Assigned'),
-              const SizedBox(width: 8),
-              _buildFilterChip('in_progress', 'On Duty (Active)'),
-              const SizedBox(width: 8),
-              _buildFilterChip('completed', 'Completed'),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterChip('all', 'All Bookings (${provider.bookings.length})'),
+                const SizedBox(width: 8),
+                _buildFilterChip('pending_review', 'Pending Dispatch (${provider.pendingDispatchesCount})'),
+                const SizedBox(width: 8),
+                _buildFilterChip('caregiver_assigned', 'Caregiver Assigned'),
+                const SizedBox(width: 8),
+                _buildFilterChip('in_progress', 'On Duty (Active)'),
+                const SizedBox(width: 8),
+                _buildFilterChip('completed', 'Completed'),
+              ],
+            ),
           ),
 
           const SizedBox(height: 20),
@@ -216,7 +222,7 @@ class _BookingsViewState extends State<BookingsView> {
               child: DataTable(
                 columnSpacing: 22,
                 dataRowMinHeight: 64,
-                dataRowMaxHeight: 84,
+                dataRowMaxHeight: 90,
                 headingRowColor: WidgetStateProperty.all(AppTheme.slate50),
                 columns: const [
                   DataColumn(label: Text('CODE', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: AppTheme.slate500))),
@@ -239,8 +245,18 @@ class _BookingsViewState extends State<BookingsView> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('${b.patientName} (${b.patientAge} Yrs, ${b.patientGender})', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-                            Text('${b.city}, ${b.district} • Contact: ${b.contactPhone}', style: const TextStyle(fontSize: 10, color: AppTheme.slate500)),
+                            Text(
+                              '${b.patientName} (${b.patientAge} Yrs, ${b.patientGender})',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                            ),
+                            Text(
+                              '${b.city}, ${b.district} • Contact: ${b.contactPhone}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 10, color: AppTheme.slate500),
+                            ),
                           ],
                         ),
                       ),
@@ -265,7 +281,12 @@ class _BookingsViewState extends State<BookingsView> {
                               ),
                             ),
                             const SizedBox(height: 2),
-                            Text(b.medicalConditions, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: AppTheme.slate600)),
+                            Text(
+                              b.medicalConditions,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 10, color: AppTheme.slate600),
+                            ),
                           ],
                         ),
                       ),
@@ -274,8 +295,18 @@ class _BookingsViewState extends State<BookingsView> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(b.serviceName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
-                            Text('${b.staffTierName} • ${b.shiftHours}h Shift (${b.durationDays} Days)', style: const TextStyle(fontSize: 10, color: AppTheme.primaryBlue)),
+                            Text(
+                              b.serviceName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                            ),
+                            Text(
+                              '${b.staffTierName} • ${b.shiftHours}h Shift (${b.durationDays} Days)',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 10, color: AppTheme.primaryBlue),
+                            ),
                           ],
                         ),
                       ),
@@ -354,6 +385,7 @@ class _BookingsViewState extends State<BookingsView> {
                               phone: b.contactPhone,
                               message: 'Hello ${b.contactName}, this is Prime Life Care. Your booking ${b.bookingCode} for ${b.patientName} is confirmed with caregiver ${b.assignedCaregiverName ?? "assigned staff"}. Contact: ${b.assignedCaregiverPhone ?? "+94 11 234 5678"}.',
                               label: 'WhatsApp Family',
+                              isCompact: true,
                             ),
                             const SizedBox(width: 4),
                             if (b.assignedCaregiverPhone != null)
@@ -361,6 +393,7 @@ class _BookingsViewState extends State<BookingsView> {
                                 phone: b.assignedCaregiverPhone!,
                                 message: 'Duty Dispatch Prime Life Care: Patient ${b.patientName} (${b.patientAge}y), Address: ${b.address}, ${b.city}. Start: ${b.startDate}. Family: ${b.contactName} (${b.contactPhone}).',
                                 label: 'Dispatch Staff',
+                                isCompact: true,
                               ),
                             const SizedBox(width: 4),
                             IconButton(
