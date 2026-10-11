@@ -6,6 +6,7 @@ import '../providers/admin_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/whatsapp_button.dart';
 import '../widgets/invoice_dialog.dart';
+import '../widgets/charts/shift_distribution_chart.dart';
 
 class BookingsView extends StatefulWidget {
   const BookingsView({super.key});
@@ -177,6 +178,11 @@ class _BookingsViewState extends State<BookingsView> {
               ),
             ],
           ),
+
+          const SizedBox(height: 20),
+
+          // Active Shift Category Breakdown Chart
+          const ShiftDistributionChart(),
 
           const SizedBox(height: 20),
 

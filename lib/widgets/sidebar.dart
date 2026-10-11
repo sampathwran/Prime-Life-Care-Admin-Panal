@@ -1,10 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/admin_provider.dart';
 import '../theme/app_theme.dart';
 
 class Sidebar extends StatelessWidget {
-  const Sidebar({super.key});
+  final String? currentPath;
+
+  const Sidebar({super.key, this.currentPath});
+
+  static const List<String> navRoutes = [
+    '/dashboard',
+    '/bookings',
+    '/services',
+    '/inventory',
+    '/orders',
+    '/staff',
+    '/clinical-logs',
+    '/reports',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -112,14 +126,20 @@ class Sidebar extends StatelessWidget {
               itemCount: navItems.length,
               itemBuilder: (context, idx) {
                 final item = navItems[idx];
-                final isSelected = selectedIdx == idx;
+                final route = navRoutes[idx];
+                final isSelected = currentPath != null
+                    ? (currentPath == route || currentPath!.startsWith('$route/'))
+                    : selectedIdx == idx;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () => provider.setSelectedNavIndex(idx),
+                      onTap: () {
+                        provider.setSelectedNavIndex(idx);
+                        context.go(route);
+                      },
                       borderRadius: BorderRadius.circular(12),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 150),

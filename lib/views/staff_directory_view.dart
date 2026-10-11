@@ -4,6 +4,7 @@ import '../providers/admin_provider.dart';
 import '../models/caregiver_model.dart';
 import '../theme/app_theme.dart';
 import '../widgets/whatsapp_button.dart';
+import '../widgets/charts/district_staff_chart.dart';
 
 class StaffDirectoryView extends StatefulWidget {
   const StaffDirectoryView({super.key});
@@ -33,7 +34,7 @@ class _StaffDirectoryViewState extends State<StaffDirectoryView> {
       return true;
     }).toList();
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,6 +109,11 @@ class _StaffDirectoryViewState extends State<StaffDirectoryView> {
           ),
           const SizedBox(height: 20),
 
+          // Islandwide Caregiver Capacity Chart
+          const DistrictStaffChart(),
+
+          const SizedBox(height: 20),
+
           // Filters & Search
           Row(
             children: [
@@ -168,28 +174,31 @@ class _StaffDirectoryViewState extends State<StaffDirectoryView> {
           const SizedBox(height: 18),
 
           // Caregivers Grid
-          Expanded(
-            child: caregivers.isEmpty
-                ? Center(
+          caregivers.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40.0),
+                  child: Center(
                     child: Text(
                       'No caregivers found with this filter.',
                       style: TextStyle(color: Colors.grey.shade500),
                     ),
-                  )
-                : GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 18,
-                      mainAxisSpacing: 18,
-                      childAspectRatio: 1.25,
-                    ),
-                    itemCount: caregivers.length,
-                    itemBuilder: (context, index) {
-                      final cg = caregivers[index];
-                      return _buildCaregiverCard(context, cg);
-                    },
                   ),
-          ),
+                )
+              : GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 18,
+                    mainAxisSpacing: 18,
+                    childAspectRatio: 1.25,
+                  ),
+                  itemCount: caregivers.length,
+                  itemBuilder: (context, index) {
+                    final cg = caregivers[index];
+                    return _buildCaregiverCard(context, cg);
+                  },
+                ),
         ],
       ),
     );

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/admin_provider.dart';
 import 'theme/app_theme.dart';
-import 'views/main_layout.dart';
+import 'routes/app_router.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,11 +19,11 @@ class PrimeLifeCareAdminApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Prime Life Care - Operations Admin Panel',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const MainLayout(),
+      routerConfig: appRouter,
     );
   }
 }

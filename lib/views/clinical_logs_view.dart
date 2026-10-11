@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../providers/admin_provider.dart';
 import '../models/clinical_log_model.dart';
 import '../theme/app_theme.dart';
+import '../widgets/charts/patient_vitals_trend_chart.dart';
 
 class ClinicalLogsView extends StatefulWidget {
   const ClinicalLogsView({super.key});
@@ -24,7 +25,7 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
       return true;
     }).toList();
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,6 +100,11 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
           ),
           const SizedBox(height: 20),
 
+          // 24-Hour Patient Vitals Progression Curve
+          const PatientVitalsTrendChart(),
+
+          const SizedBox(height: 20),
+
           // Filters
           Row(
             children: [
@@ -121,23 +127,26 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
           const SizedBox(height: 18),
 
           // Clinical Logs List
-          Expanded(
-            child: logs.isEmpty
-                ? Center(
+          logs.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40.0),
+                  child: Center(
                     child: Text(
                       'No clinical records found.',
                       style: TextStyle(color: Colors.grey.shade500),
                     ),
-                  )
-                : ListView.separated(
-                    itemCount: logs.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      final log = logs[index];
-                      return _buildLogCard(context, log);
-                    },
                   ),
-          ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: logs.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final log = logs[index];
+                    return _buildLogCard(context, log);
+                  },
+                ),
         ],
       ),
     );

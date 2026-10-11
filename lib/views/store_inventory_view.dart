@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../providers/admin_provider.dart';
 import '../models/medical_item_model.dart';
 import '../theme/app_theme.dart';
+import '../widgets/charts/inventory_rental_chart.dart';
 
 class StoreInventoryView extends StatefulWidget {
   const StoreInventoryView({super.key});
@@ -33,7 +34,7 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
       return true;
     }).toList();
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,6 +109,11 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
           ),
           const SizedBox(height: 20),
 
+          // Inventory & Rental Capacity Chart
+          const InventoryRentalChart(),
+
+          const SizedBox(height: 20),
+
           // Filter bar & Search
           Row(
             children: [
@@ -174,28 +180,31 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
           const SizedBox(height: 18),
 
           // Product Grid
-          Expanded(
-            child: items.isEmpty
-                ? Center(
+          items.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40.0),
+                  child: Center(
                     child: Text(
                       'No medical supplies found.',
                       style: TextStyle(color: Colors.grey.shade500),
                     ),
-                  )
-                : GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 18,
-                      mainAxisSpacing: 18,
-                      childAspectRatio: 1.15,
-                    ),
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      return _buildProductCard(context, item);
-                    },
                   ),
-          ),
+                )
+              : GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 18,
+                    mainAxisSpacing: 18,
+                    childAspectRatio: 1.15,
+                  ),
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+                    return _buildProductCard(context, item);
+                  },
+                ),
         ],
       ),
     );

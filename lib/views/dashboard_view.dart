@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/admin_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/whatsapp_button.dart';
 import '../widgets/invoice_dialog.dart';
+import '../widgets/charts/weekly_revenue_chart.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
@@ -58,7 +60,10 @@ class DashboardView extends StatelessWidget {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
                     ),
-                    onPressed: () => provider.setSelectedNavIndex(1),
+                    onPressed: () {
+                      provider.setSelectedNavIndex(1);
+                      context.go('/bookings');
+                    },
                   ),
                   const SizedBox(width: 10),
                   OutlinedButton.icon(
@@ -70,7 +75,10 @@ class DashboardView extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    onPressed: () => provider.setSelectedNavIndex(3),
+                    onPressed: () {
+                      provider.setSelectedNavIndex(3);
+                      context.go('/inventory');
+                    },
                   ),
                 ],
               ),
@@ -143,6 +151,11 @@ class DashboardView extends StatelessWidget {
               );
             },
           ),
+
+          const SizedBox(height: 24),
+
+          // Weekly Realized Revenue & Shift Curve
+          const WeeklyRevenueChart(),
 
           const SizedBox(height: 28),
 

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/admin_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/charts/financial_growth_chart.dart';
 
 class ReportsSettingsView extends StatefulWidget {
   const ReportsSettingsView({super.key});
@@ -184,6 +185,11 @@ class _ReportsSettingsViewState extends State<ReportsSettingsView> {
                 ),
               ],
             ),
+            const SizedBox(height: 24),
+
+            // 6-Month Business Streams Financial Growth Chart
+            const FinancialGrowthChart(),
+
             const SizedBox(height: 24),
 
             // District Shift Coverage Table
