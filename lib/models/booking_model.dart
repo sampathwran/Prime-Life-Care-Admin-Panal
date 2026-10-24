@@ -168,6 +168,7 @@ class BookingModel {
     String? paymentMethod,
     double? advanceAmountLKR,
     Map<String, dynamic>? caregiverChangeRequest,
+    bool clearAssignedCaregiver = false,
   }) {
     return BookingModel(
       id: id ?? this.id,
@@ -191,9 +192,9 @@ class BookingModel {
       durationDays: durationDays ?? this.durationDays,
       totalCostLKR: totalCostLKR ?? this.totalCostLKR,
       status: status ?? this.status,
-      assignedCaregiverId: assignedCaregiverId ?? this.assignedCaregiverId,
-      assignedCaregiverName: assignedCaregiverName ?? this.assignedCaregiverName,
-      assignedCaregiverPhone: assignedCaregiverPhone ?? this.assignedCaregiverPhone,
+      assignedCaregiverId: clearAssignedCaregiver ? null : (assignedCaregiverId ?? this.assignedCaregiverId),
+      assignedCaregiverName: clearAssignedCaregiver ? null : (assignedCaregiverName ?? this.assignedCaregiverName),
+      assignedCaregiverPhone: clearAssignedCaregiver ? null : (assignedCaregiverPhone ?? this.assignedCaregiverPhone),
       paymentStatus: paymentStatus ?? this.paymentStatus,
       createdAt: createdAt ?? this.createdAt,
       candidateQueue: candidateQueue ?? this.candidateQueue,

@@ -1,3 +1,6 @@
+# Firebase cache
+.firebase/
+
 # Miscellaneous
 *.class
 *.log

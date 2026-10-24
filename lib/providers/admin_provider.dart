@@ -1015,9 +1015,7 @@ class AdminProvider extends ChangeNotifier {
     if (idx != -1) {
       final oldCgId = _bookings[idx].assignedCaregiverId;
       final updated = _bookings[idx].copyWith(
-        assignedCaregiverId: null,
-        assignedCaregiverName: null,
-        assignedCaregiverPhone: null,
+        clearAssignedCaregiver: true,
         status: 'pending_review',
       );
       _bookings[idx] = updated;
@@ -1054,19 +1052,40 @@ class AdminProvider extends ChangeNotifier {
   void updateBookingStatus(String bookingId, String newStatus) {
     final idx = _bookings.indexWhere((b) => b.id == bookingId || b.bookingCode == bookingId);
     if (idx != -1) {
-      final updated = _bookings[idx].copyWith(status: newStatus);
+      final oldCgId = _bookings[idx].assignedCaregiverId;
+      final isPending = (newStatus == 'pending_review');
+      final updated = _bookings[idx].copyWith(
+        status: newStatus,
+        clearAssignedCaregiver: isPending,
+      );
       _bookings[idx] = updated;
 
       // Sync to Firestore cloud
       final docId = updated.id.isNotEmpty ? updated.id : updated.bookingCode;
       try {
+        final updatePayload = <String, dynamic>{'status': newStatus};
+        if (isPending) {
+          updatePayload['assignedCaregiverId'] = null;
+          updatePayload['assignedCaregiverName'] = null;
+          updatePayload['assignedCaregiverPhone'] = null;
+        }
         FirebaseFirestore.instance
             .collection('bookings')
             .doc(docId)
-            .set({'status': newStatus}, SetOptions(merge: true))
+            .set(updatePayload, SetOptions(merge: true))
             .catchError((e) => debugPrint('[Firestore] updateBookingStatus write error: $e'));
       } catch (e) {
         debugPrint('[Firestore] updateBookingStatus fallback: $e');
+      }
+
+      if (isPending && oldCgId != null) {
+        final cgIdx = _caregivers.indexWhere((c) => c.id == oldCgId);
+        if (cgIdx != -1) {
+          _caregivers[cgIdx] = _caregivers[cgIdx].copyWith(
+            status: 'available',
+            activeAssignedPatient: null,
+          );
+        }
       }
 
       notifyListeners();
