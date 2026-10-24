@@ -5,6 +5,7 @@ import '../models/caregiver_model.dart';
 import '../theme/app_theme.dart';
 import '../widgets/whatsapp_button.dart';
 import '../widgets/charts/district_staff_chart.dart';
+import '../widgets/caregiver_profile_management_dialog.dart';
 
 class StaffDirectoryView extends StatefulWidget {
   const StaffDirectoryView({super.key});
@@ -191,7 +192,7 @@ class _StaffDirectoryViewState extends State<StaffDirectoryView> {
                     crossAxisCount: 3,
                     crossAxisSpacing: 18,
                     mainAxisSpacing: 18,
-                    mainAxisExtent: 265,
+                    mainAxisExtent: 300,
                   ),
                   itemCount: caregivers.length,
                   itemBuilder: (context, index) {
@@ -228,23 +229,28 @@ class _StaffDirectoryViewState extends State<StaffDirectoryView> {
             child: Icon(icon, color: color, size: 22),
           ),
           const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.slate900,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
-              ),
-            ],
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.slate900,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -300,24 +306,27 @@ class _StaffDirectoryViewState extends State<StaffDirectoryView> {
   Widget _buildCaregiverCard(BuildContext context, CaregiverModel cg) {
     final isOnDuty = cg.status == 'on_duty';
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isOnDuty ? AppTheme.primaryBlue.withOpacity(0.4) : Colors.grey.shade200,
-          width: isOnDuty ? 1.5 : 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+    return InkWell(
+      onTap: () => CaregiverProfileManagementDialog.show(context, cg),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isOnDuty ? AppTheme.primaryBlue.withOpacity(0.4) : Colors.grey.shade200,
+            width: isOnDuty ? 1.5 : 1,
           ),
-        ],
-      ),
-      child: Column(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header with Avatar & Status
@@ -430,15 +439,35 @@ class _StaffDirectoryViewState extends State<StaffDirectoryView> {
 
           const Spacer(),
 
-          // Compliance Verification Badges
+          // Verification Badges
           Row(
             children: [
               _buildBadge('Police', cg.isPoliceVerified),
-              const SizedBox(width: 4),
+              const SizedBox(width: 6),
               _buildBadge('Medical', cg.isMedicalCleared),
-              const SizedBox(width: 4),
+              const SizedBox(width: 6),
               _buildBadge('CPR', cg.isCprCertified),
-              const Spacer(),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Action Buttons: Manage & Chat
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => CaregiverProfileManagementDialog.show(context, cg),
+                  icon: const Icon(Icons.manage_accounts_rounded, size: 16),
+                  label: const Text('Manage Profile', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primaryBlue,
+                    side: const BorderSide(color: AppTheme.primaryBlue),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
               WhatsAppButton(
                 phoneNumber: cg.phone,
                 customMessage: 'Hello ${cg.name}, this is Prime Life Care Operations regarding your shift assignment.',
@@ -448,8 +477,9 @@ class _StaffDirectoryViewState extends State<StaffDirectoryView> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildBadge(String label, bool verified) {
     return Container(

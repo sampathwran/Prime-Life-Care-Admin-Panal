@@ -2,10 +2,12 @@ import 'package:go_router/go_router.dart';
 import '../views/main_layout.dart';
 import '../views/dashboard_view.dart';
 import '../views/bookings_view.dart';
+import '../views/registered_users_view.dart';
 import '../views/services_manager_view.dart';
 import '../views/store_inventory_view.dart';
 import '../views/orders_rentals_view.dart';
 import '../views/staff_directory_view.dart';
+import '../views/staff_approvals_view.dart';
 import '../views/clinical_logs_view.dart';
 import '../views/reports_settings_view.dart';
 
@@ -37,6 +39,12 @@ final appRouter = GoRouter(
           ),
         ),
         GoRoute(
+          path: '/users',
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: RegisteredUsersView(),
+          ),
+        ),
+        GoRoute(
           path: '/services',
           pageBuilder: (context, state) => const NoTransitionPage(
             child: ServicesManagerView(),
@@ -58,6 +66,12 @@ final appRouter = GoRouter(
           path: '/staff',
           pageBuilder: (context, state) => const NoTransitionPage(
             child: StaffDirectoryView(),
+          ),
+        ),
+        GoRoute(
+          path: '/staff-approvals',
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: StaffApprovalsView(),
           ),
         ),
         GoRoute(

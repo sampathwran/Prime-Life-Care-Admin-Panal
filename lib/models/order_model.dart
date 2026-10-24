@@ -12,6 +12,27 @@ class OrderItemEntry {
     required this.priceLKR,
     required this.type,
   });
+
+  factory OrderItemEntry.fromMap(Map<String, dynamic> map) {
+    return OrderItemEntry(
+      itemId: map['itemId']?.toString() ?? '',
+      itemName: (map['itemName'] ?? map['name'])?.toString() ?? 'Item',
+      quantity: (map['quantity'] as num?)?.toInt() ?? 1,
+      priceLKR: (map['priceLKR'] as num?)?.toDouble() ?? 0.0,
+      type: map['type']?.toString() ?? 'purchase',
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'itemId': itemId,
+      'itemName': itemName,
+      'name': itemName,
+      'quantity': quantity,
+      'priceLKR': priceLKR,
+      'type': type,
+    };
+  }
 }
 
 class OrderModel {
@@ -91,5 +112,57 @@ class OrderModel {
       securityDepositLKR: securityDepositLKR ?? this.securityDepositLKR,
       createdAt: createdAt ?? this.createdAt,
     );
+  }
+
+  factory OrderModel.fromMap(Map<String, dynamic> map, String docId) {
+    var rawItems = map['items'];
+    List<OrderItemEntry> parsedItems = [];
+    if (rawItems is List) {
+      parsedItems = rawItems
+          .map((i) => OrderItemEntry.fromMap(Map<String, dynamic>.from(i as Map)))
+          .toList();
+    }
+
+    return OrderModel(
+      id: docId,
+      orderCode: map['orderCode']?.toString() ?? docId,
+      customerName: (map['customerName'] ?? map['contactName'])?.toString() ?? 'Customer',
+      customerPhone: (map['customerPhone'] ?? map['contactPhone'])?.toString() ?? '',
+      deliveryAddress: map['deliveryAddress']?.toString() ?? '',
+      district: map['district']?.toString() ?? 'Colombo',
+      items: parsedItems,
+      totalAmountLKR: ((map['totalAmountLKR'] ?? map['total']) as num?)?.toDouble() ?? 0.0,
+      paymentMethod: map['paymentMethod']?.toString() ?? 'cod',
+      paymentStatus: map['paymentStatus']?.toString() ?? 'pending_verification',
+      bankSlipUrl: map['bankSlipUrl']?.toString(),
+      orderStatus: (map['orderStatus'] ?? map['status'])?.toString() ?? 'pending',
+      isRental: map['isRental'] as bool? ?? false,
+      rentalStartDate: map['rentalStartDate']?.toString(),
+      rentalEndDate: map['rentalEndDate']?.toString(),
+      securityDepositLKR: (map['securityDepositLKR'] as num?)?.toDouble(),
+      createdAt: map['createdAt']?.toString() ?? '',
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'orderCode': orderCode,
+      'customerName': customerName,
+      'customerPhone': customerPhone,
+      'deliveryAddress': deliveryAddress,
+      'district': district,
+      'items': items.map((i) => i.toMap()).toList(),
+      'totalAmountLKR': totalAmountLKR,
+      'paymentMethod': paymentMethod,
+      'paymentStatus': paymentStatus,
+      'bankSlipUrl': bankSlipUrl,
+      'orderStatus': orderStatus,
+      'status': orderStatus,
+      'isRental': isRental,
+      'rentalStartDate': rentalStartDate,
+      'rentalEndDate': rentalEndDate,
+      'securityDepositLKR': securityDepositLKR,
+      'createdAt': createdAt,
+    };
   }
 }

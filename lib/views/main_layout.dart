@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../widgets/sidebar.dart';
-import '../widgets/top_app_bar.dart';
 import '../theme/app_theme.dart';
 
 class MainLayout extends StatelessWidget {
@@ -23,15 +22,8 @@ class MainLayout extends StatelessWidget {
             // Dark Navigation Sidebar synced with URL routes
             Sidebar(currentPath: currentPath),
 
-            // Main Content Body with Global Top Bar
-            Expanded(
-              child: Column(
-                children: [
-                  const TopAppBar(),
-                  Expanded(child: child),
-                ],
-              ),
-            ),
+            // Main Content Body
+            Expanded(child: child),
           ],
         ),
       ),

@@ -114,7 +114,9 @@ class _BookingsViewState extends State<BookingsView> {
                             color: isCurrent ? AppTheme.primaryBlue : AppTheme.slate200,
                           ),
                         ),
-                        child: ListTile(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: ListTile(
                           dense: true,
                           leading: CircleAvatar(
                             radius: 16,
@@ -159,7 +161,8 @@ class _BookingsViewState extends State<BookingsView> {
                             ),
                           ),
                         ),
-                      );
+                      ),
+                    );
                     },
                   ),
                 ),
@@ -1500,7 +1503,7 @@ class _BookingsViewState extends State<BookingsView> {
                                             color: AppTheme.rose500,
                                             borderRadius: BorderRadius.circular(4),
                                           ),
-                                          child: const Text('CHANGE REQUESTED', style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.black, color: Colors.white)),
+                                          child: const Text('CHANGE REQUESTED', style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w900, color: Colors.white)),
                                         ),
                                       ],
                                     ],

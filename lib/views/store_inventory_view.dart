@@ -35,7 +35,7 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
     }).toList();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -49,32 +49,32 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                   const Text(
                     'Medical Store & Equipment Inventory',
                     style: TextStyle(
-                      fontSize: 22,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.slate900,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     'Manage hospital beds, ripple mattresses, adult diapers, wheelchairs, and monthly rentals.',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                   ),
                 ],
               ),
               ElevatedButton.icon(
                 onPressed: () => _openItemDialog(context, null),
-                icon: const Icon(Icons.add_box_outlined, size: 18),
-                label: const Text('Add Medical Item'),
+                icon: const Icon(Icons.add_box_outlined, size: 14),
+                label: const Text('Add Medical Item', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryBlue,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
 
           // Inventory KPI Row
           Row(
@@ -87,7 +87,7 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                   color: AppTheme.primaryBlue,
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 8),
               Expanded(
                 child: _buildMetricTile(
                   title: 'Low Stock Alerts (≤ 5)',
@@ -96,7 +96,7 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                   color: Colors.amber.shade700,
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 8),
               Expanded(
                 child: _buildMetricTile(
                   title: 'Rentable Equipment',
@@ -107,12 +107,12 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
 
           // Inventory & Rental Capacity Chart
           const InventoryRentalChart(),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
 
           // Filter bar & Search
           Row(
@@ -123,25 +123,25 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                   child: Row(
                     children: [
                       _buildCatChip('All Products', 'all', provider.medicalItems.length),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       _buildCatChip(
                         'Equipment',
                         'equipment',
                         provider.medicalItems.where((m) => m.category == 'equipment').length,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       _buildCatChip(
                         'Mobility',
                         'mobility',
                         provider.medicalItems.where((m) => m.category == 'mobility').length,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       _buildCatChip(
                         'Hygiene & Diapers',
                         'hygiene',
                         provider.medicalItems.where((m) => m.category == 'hygiene').length,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       _buildCatChip(
                         'Vitals Monitoring',
                         'monitoring',
@@ -151,25 +151,26 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 10),
               SizedBox(
-                width: 250,
-                height: 40,
+                width: 220,
+                height: 32,
                 child: TextField(
                   onChanged: (val) => setState(() => _searchFilter = val),
+                  style: const TextStyle(fontSize: 11),
                   decoration: InputDecoration(
                     hintText: 'Search products...',
-                    hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
-                    prefixIcon: const Icon(Icons.search, size: 18),
+                    hintStyle: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                    prefixIcon: const Icon(Icons.search, size: 15),
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(color: Colors.grey.shade200),
                     ),
                   ),
@@ -177,32 +178,39 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
 
           // Product Grid
           items.isEmpty
               ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40.0),
+                  padding: const EdgeInsets.symmetric(vertical: 30.0),
                   child: Center(
                     child: Text(
                       'No medical supplies found.',
-                      style: TextStyle(color: Colors.grey.shade500),
+                      style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
                     ),
                   ),
                 )
-              : GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 18,
-                    mainAxisSpacing: 18,
-                    mainAxisExtent: 320,
-                  ),
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    return _buildProductCard(context, item);
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final cols = constraints.maxWidth < 680
+                        ? 1
+                        : (constraints.maxWidth < 1050 ? 2 : 3);
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: cols,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        mainAxisExtent: 250,
+                      ),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        final item = items[index];
+                        return _buildProductCard(context, item);
+                      },
+                    );
                   },
                 ),
         ],
@@ -217,35 +225,35 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: color, size: 22),
+            child: Icon(icon, color: color, size: 16),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 1),
               Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.slate900,
                 ),
@@ -261,12 +269,12 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
     final isSelected = _selectedCategory == key;
     return InkWell(
       onTap: () => setState(() => _selectedCategory = key),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: isSelected ? AppTheme.slate900 : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? AppTheme.slate900 : Colors.grey.shade300,
           ),
@@ -276,22 +284,22 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
             Text(
               label,
               style: TextStyle(
-                fontSize: 12.5,
+                fontSize: 10.5,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: isSelected ? Colors.white : AppTheme.slate800,
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 5),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
               decoration: BoxDecoration(
                 color: isSelected ? Colors.white.withOpacity(0.2) : Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 '$count',
                 style: TextStyle(
-                  fontSize: 10.5,
+                  fontSize: 9.5,
                   fontWeight: FontWeight.bold,
                   color: isSelected ? Colors.white : Colors.grey.shade700,
                 ),
@@ -309,13 +317,13 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -326,9 +334,9 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
                 child: SizedBox(
-                  height: 120,
+                  height: 95,
                   width: double.infinity,
                   child: item.imageUrls.isNotEmpty
                       ? Image.network(
@@ -337,50 +345,50 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                           errorBuilder: (_, __, ___) => Container(
                             color: Colors.grey.shade100,
                             child: const Center(
-                              child: Icon(Icons.medical_services_outlined, size: 40, color: Colors.grey),
+                              child: Icon(Icons.medical_services_outlined, size: 28, color: Colors.grey),
                             ),
                           ),
                         )
                       : Container(
                           color: Colors.grey.shade100,
                           child: const Center(
-                            child: Icon(Icons.image_not_supported_outlined, size: 36, color: Colors.grey),
+                            child: Icon(Icons.image_not_supported_outlined, size: 28, color: Colors.grey),
                           ),
                         ),
                 ),
               ),
               // Category & rental badge
               Positioned(
-                top: 8,
-                left: 8,
+                top: 6,
+                left: 6,
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         item.category.toUpperCase(),
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
                     if (item.canRent) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: AppTheme.emeraldGreen,
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.repeat, size: 10, color: Colors.white),
-                            SizedBox(width: 3),
+                            Icon(Icons.repeat, size: 8, color: Colors.white),
+                            SizedBox(width: 2),
                             Text(
                               'RENTAL',
-                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                              style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                           ],
                         ),
@@ -392,21 +400,21 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
               // Multi-image count pill
               if (item.imageUrls.length > 1)
                 Positioned(
-                  bottom: 8,
-                  right: 8,
+                  bottom: 6,
+                  right: 6,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.65),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.photo_library, size: 11, color: Colors.white),
-                        const SizedBox(width: 4),
+                        const Icon(Icons.photo_library, size: 10, color: Colors.white),
+                        const SizedBox(width: 3),
                         Text(
-                          '${item.imageUrls.length} photos',
-                          style: const TextStyle(fontSize: 10, color: Colors.white),
+                          '${item.imageUrls.length}',
+                          style: const TextStyle(fontSize: 9, color: Colors.white),
                         ),
                       ],
                     ),
@@ -418,7 +426,7 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
           // Details
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -427,7 +435,7 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.slate900,
                     ),
@@ -436,7 +444,7 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                     item.nameSi,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 9.5, color: Colors.grey.shade600),
                   ),
                   const Spacer(),
 
@@ -447,11 +455,11 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Buy Price', style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
+                          Text('Buy Price', style: TextStyle(fontSize: 9, color: Colors.grey.shade500)),
                           Text(
                             currencyFormat.format(item.buyPriceLKR),
                             style: const TextStyle(
-                              fontSize: 13,
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.slate900,
                             ),
@@ -462,11 +470,11 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text('Rent / Month', style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
+                            Text('Rent / Month', style: TextStyle(fontSize: 9, color: Colors.grey.shade500)),
                             Text(
                               currencyFormat.format(item.monthlyRentLKR),
                               style: const TextStyle(
-                                fontSize: 13,
+                                fontSize: 11,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.primaryBlue,
                               ),
@@ -475,17 +483,17 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
 
                   // Stock & Actions
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: isLowStock ? Colors.amber.shade50 : Colors.green.shade50,
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(4),
                           border: Border.all(
                             color: isLowStock ? Colors.amber.shade300 : Colors.green.shade200,
                           ),
@@ -494,14 +502,14 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                           children: [
                             Icon(
                               isLowStock ? Icons.warning_amber_rounded : Icons.check_circle_outline,
-                              size: 12,
+                              size: 10,
                               color: isLowStock ? Colors.amber.shade900 : Colors.green.shade800,
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: 3),
                             Text(
                               'Stock: ${item.stock}',
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 9.5,
                                 fontWeight: FontWeight.bold,
                                 color: isLowStock ? Colors.amber.shade900 : Colors.green.shade800,
                               ),
@@ -513,9 +521,9 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                         children: [
                           IconButton(
                             onPressed: () => _openItemDialog(context, item),
-                            icon: const Icon(Icons.edit_outlined, size: 16),
+                            icon: const Icon(Icons.edit_outlined, size: 14),
                             tooltip: 'Edit Item',
-                            padding: const EdgeInsets.all(4),
+                            padding: const EdgeInsets.all(2),
                             constraints: const BoxConstraints(),
                           ),
                           const SizedBox(width: 4),
@@ -524,8 +532,8 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                               showDialog(
                                 context: context,
                                 builder: (ctx) => AlertDialog(
-                                  title: const Text('Delete Medical Item?'),
-                                  content: Text('Are you sure you want to remove "${item.nameEn}" from the catalog?'),
+                                  title: const Text('Delete Medical Item?', style: TextStyle(fontSize: 14)),
+                                  content: Text('Are you sure you want to remove "${item.nameEn}" from the catalog?', style: const TextStyle(fontSize: 12)),
                                   actions: [
                                     TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
                                     ElevatedButton(
@@ -540,9 +548,9 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                                 ),
                               );
                             },
-                            icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                            icon: const Icon(Icons.delete_outline, size: 14, color: Colors.red),
                             tooltip: 'Delete Item',
-                            padding: const EdgeInsets.all(4),
+                            padding: const EdgeInsets.all(2),
                             constraints: const BoxConstraints(),
                           ),
                         ],

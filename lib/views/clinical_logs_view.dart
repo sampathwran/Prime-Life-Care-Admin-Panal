@@ -26,7 +26,7 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
     }).toList();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -40,32 +40,32 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
                   const Text(
                     'Clinical Vitals Logbook & Supervisor Audit',
                     style: TextStyle(
-                      fontSize: 22,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.slate900,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     'Real-time bedside vitals (BP, Sugar, SpO2, Pulse) and 2-hour bedsore turning compliance.',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                   ),
                 ],
               ),
               ElevatedButton.icon(
                 onPressed: () => _openAddLogDialog(context),
-                icon: const Icon(Icons.add_chart_rounded, size: 18),
-                label: const Text('Add Vitals Entry'),
+                icon: const Icon(Icons.add_chart_rounded, size: 14),
+                label: const Text('Add Vitals Entry', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryBlue,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
 
           // Vitals Summary Metrics
           Row(
@@ -78,7 +78,7 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
                   color: AppTheme.primaryBlue,
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 8),
               Expanded(
                 child: _buildMetricTile(
                   title: 'Pending Supervisor Sign-Off',
@@ -87,7 +87,7 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
                   color: Colors.amber.shade800,
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 8),
               Expanded(
                 child: _buildMetricTile(
                   title: '2-Hour Bed Turning Compliance',
@@ -98,42 +98,45 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
 
           // 24-Hour Patient Vitals Progression Curve
           const PatientVitalsTrendChart(),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
 
           // Filters
-          Row(
-            children: [
-              _buildFilterBtn('All Logs', 'all', provider.clinicalLogs.length),
-              const SizedBox(width: 8),
-              _buildFilterBtn(
-                'Needs Review',
-                'pending_review',
-                provider.clinicalLogs.where((l) => !l.isSupervisorReviewed).length,
-                highlight: true,
-              ),
-              const SizedBox(width: 8),
-              _buildFilterBtn(
-                'Reviewed & Cleared',
-                'reviewed',
-                provider.clinicalLogs.where((l) => l.isSupervisorReviewed).length,
-              ),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterBtn('All Logs', 'all', provider.clinicalLogs.length),
+                const SizedBox(width: 6),
+                _buildFilterBtn(
+                  'Needs Review',
+                  'pending_review',
+                  provider.clinicalLogs.where((l) => !l.isSupervisorReviewed).length,
+                  highlight: true,
+                ),
+                const SizedBox(width: 6),
+                _buildFilterBtn(
+                  'Reviewed & Cleared',
+                  'reviewed',
+                  provider.clinicalLogs.where((l) => l.isSupervisorReviewed).length,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
 
           // Clinical Logs List
           logs.isEmpty
               ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40.0),
+                  padding: const EdgeInsets.symmetric(vertical: 30.0),
                   child: Center(
                     child: Text(
                       'No clinical records found.',
-                      style: TextStyle(color: Colors.grey.shade500),
+                      style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
                     ),
                   ),
                 )
@@ -141,7 +144,7 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: logs.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final log = logs[index];
                     return _buildLogCard(context, log);
@@ -159,35 +162,35 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: color, size: 22),
+            child: Icon(icon, color: color, size: 16),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 1),
               Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.slate900,
                 ),
@@ -203,12 +206,12 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
     final isSelected = _filter == key;
     return InkWell(
       onTap: () => setState(() => _filter = key),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: isSelected ? AppTheme.slate900 : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: highlight && !isSelected ? Colors.amber.shade600 : (isSelected ? AppTheme.slate900 : Colors.grey.shade300),
           ),
@@ -218,22 +221,22 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
             Text(
               label,
               style: TextStyle(
-                fontSize: 12.5,
+                fontSize: 10.5,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: isSelected ? Colors.white : AppTheme.slate800,
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 5),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
               decoration: BoxDecoration(
                 color: highlight ? Colors.amber.shade100 : (isSelected ? Colors.white.withOpacity(0.2) : Colors.grey.shade100),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 '$count',
                 style: TextStyle(
-                  fontSize: 10.5,
+                  fontSize: 9.5,
                   fontWeight: FontWeight.bold,
                   color: highlight ? Colors.amber.shade900 : (isSelected ? Colors.white : Colors.grey.shade700),
                 ),
@@ -247,16 +250,16 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
 
   Widget _buildLogCard(BuildContext context, ClinicalLogModel log) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -267,58 +270,68 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryBlue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryBlue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Icon(Icons.person_pin, color: AppTheme.primaryBlue, size: 16),
                     ),
-                    child: const Icon(Icons.person_pin, color: AppTheme.primaryBlue, size: 20),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            log.patientName,
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.slate900),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  log.patientName,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.slate900),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                log.bookingCode,
+                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.grey.shade600),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
                           Text(
-                            log.bookingCode,
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade600),
+                            'Caregiver: ${log.caregiverName} • Recorded: ${log.recordedAt}',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 9.5, color: Colors.grey.shade600),
                           ),
                         ],
                       ),
-                      Text(
-                        'Caregiver: ${log.caregiverName} • Recorded: ${log.recordedAt}',
-                        style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
 
               // Supervisor Review Status
               if (log.isSupervisorReviewed)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                   decoration: BoxDecoration(
                     color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(4),
                     border: Border.all(color: Colors.green.shade200),
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.verified, size: 14, color: AppTheme.emeraldGreen),
-                      const SizedBox(width: 4),
+                      const Icon(Icons.verified, size: 12, color: AppTheme.emeraldGreen),
+                      const SizedBox(width: 3),
                       Text(
                         'Nursing Supervisor Cleared',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.green.shade900),
+                        style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.green.shade900),
                       ),
                     ],
                   ),
@@ -334,82 +347,108 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
                       ),
                     );
                   },
-                  icon: const Icon(Icons.check_circle_outline, size: 16),
+                  icon: const Icon(Icons.check_circle_outline, size: 13),
                   label: const Text('Sign Off as Supervisor'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.amber.shade700,
                     foregroundColor: Colors.white,
-                    textStyle: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
-          // Vitals Metrics Chips Row
+          // Vitals Metrics Chips Row (Horizontal Scroll to prevent overflow on narrow screens)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.grey.shade200),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildVitalMetric('Blood Pressure', log.bloodPressure, Icons.speed),
-                _buildDivider(),
-                _buildVitalMetric('Blood Sugar', log.bloodSugar, Icons.water_drop_outlined),
-                _buildDivider(),
-                _buildVitalMetric('Heart Pulse', '${log.pulseRate} bpm', Icons.favorite_border),
-                _buildDivider(),
-                _buildVitalMetric('Oxygen (SpO2)', '${log.spO2}%', Icons.air),
-                _buildDivider(),
-                _buildVitalMetric('Temperature', log.temperature, Icons.thermostat_outlined),
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildVitalMetric('Blood Pressure', log.bloodPressure, Icons.speed),
+                  _buildDivider(),
+                  _buildVitalMetric('Blood Sugar', log.bloodSugar, Icons.water_drop_outlined),
+                  _buildDivider(),
+                  _buildVitalMetric('Heart Pulse', '${log.pulseRate} bpm', Icons.favorite_border),
+                  _buildDivider(),
+                  _buildVitalMetric('Oxygen (SpO2)', '${log.spO2}%', Icons.air),
+                  _buildDivider(),
+                  _buildVitalMetric('Temperature', log.temperature, Icons.thermostat_outlined),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
 
-          // Bed turning & Medication checklist + Clinical notes
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 2,
+          // Bed turning & Medication checklist + Clinical notes (Responsive layout)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 620;
+              final chips = Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  _buildCheckChip('2-Hour Bed Turning', log.bedsoreTurnDone),
+                  _buildCheckChip('Medication Administered', log.medicationGiven),
+                ],
+              );
+              final notes = Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.blue.shade100),
+                ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildCheckChip('2-Hour Bed Turning', log.bedsoreTurnDone),
-                    const SizedBox(width: 8),
-                    _buildCheckChip('Medication Administered', log.medicationGiven),
+                    const Icon(Icons.notes, size: 14, color: AppTheme.primaryBlue),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        log.clinicalNotes,
+                        style: const TextStyle(fontSize: 10, color: AppTheme.slate800),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              Expanded(
-                flex: 3,
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.shade100),
+              );
+
+              if (isNarrow) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    chips,
+                    const SizedBox(height: 6),
+                    notes,
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: chips,
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.notes, size: 16, color: AppTheme.primaryBlue),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          log.clinicalNotes,
-                          style: const TextStyle(fontSize: 12, color: AppTheme.slate800),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 3,
+                    child: notes,
                   ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -421,27 +460,31 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
   }
 
   Widget _buildVitalMetric(String label, String value, IconData icon) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 13, color: AppTheme.primaryBlue),
-            const SizedBox(width: 4),
-            Text(label, style: TextStyle(fontSize: 10.5, color: Colors.grey.shade600)),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: AppTheme.slate900),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Column(
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 13, color: AppTheme.primaryBlue),
+              const SizedBox(width: 4),
+              Text(label, style: TextStyle(fontSize: 10.5, color: Colors.grey.shade600)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: AppTheme.slate900),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildCheckChip(String label, bool isDone) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: isDone ? Colors.green.shade50 : Colors.red.shade50,
         borderRadius: BorderRadius.circular(6),
@@ -450,12 +493,12 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(isDone ? Icons.check_circle : Icons.cancel, size: 14, color: isDone ? AppTheme.emeraldGreen : Colors.red),
-          const SizedBox(width: 6),
+          Icon(isDone ? Icons.check_circle : Icons.cancel, size: 13, color: isDone ? AppTheme.emeraldGreen : Colors.red),
+          const SizedBox(width: 5),
           Text(
             label,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 10.5,
               fontWeight: FontWeight.bold,
               color: isDone ? Colors.green.shade900 : Colors.red.shade900,
             ),
@@ -466,15 +509,15 @@ class _ClinicalLogsViewState extends State<ClinicalLogsView> {
   }
 
   void _openAddLogDialog(BuildContext context) {
-    final patientCtrl = TextEditingController(text: 'Mrs. Jayasinghe (Nugegoda)');
-    final codeCtrl = TextEditingController(text: 'PLC-2026-1024');
-    final cgCtrl = TextEditingController(text: 'Sister K. Chamila');
-    final bpCtrl = TextEditingController(text: '122/80 mmHg');
-    final sugarCtrl = TextEditingController(text: '118 mg/dL');
+    final patientCtrl = TextEditingController();
+    final codeCtrl = TextEditingController();
+    final cgCtrl = TextEditingController();
+    final bpCtrl = TextEditingController(text: '120/80 mmHg');
+    final sugarCtrl = TextEditingController(text: '110 mg/dL');
     final pulseCtrl = TextEditingController(text: '72');
     final spo2Ctrl = TextEditingController(text: '98');
     final tempCtrl = TextEditingController(text: '98.4 °F');
-    final notesCtrl = TextEditingController(text: 'Afternoon tea and light walking with support. Patient stable.');
+    final notesCtrl = TextEditingController();
     bool bedTurning = true;
     bool meds = true;
 

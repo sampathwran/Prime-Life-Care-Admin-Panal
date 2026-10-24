@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'providers/admin_provider.dart';
 import 'theme/app_theme.dart';
 import 'routes/app_router.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    debugPrint('Firebase init warning (proceeding offline): $e');
+  }
+
   runApp(
     ChangeNotifierProvider(
-      create: (_) => AdminProvider(),
+      create: (_) => AdminProvider()..initFirebaseListeners(),
       child: const PrimeLifeCareAdminApp(),
     ),
   );

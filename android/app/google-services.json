@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "790518603401",
+    "project_id": "prime-life-care-dcacf",
+    "storage_bucket": "prime-life-care-dcacf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:790518603401:android:b8c16eb837b87437777058",
+        "android_client_info": {
+          "package_name": "lk.primelifecare.prime_life_care_admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9ouFkIsOx2yrWryOzaL5jJqYcb4GP76Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

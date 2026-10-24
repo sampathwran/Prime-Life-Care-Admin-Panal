@@ -61,20 +61,23 @@ class WhatsAppButton extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isCompact) {
       return IconButton(
-        icon: const Icon(Icons.chat_bubble_rounded, color: AppTheme.whatsappGreen, size: 20),
+        icon: const Icon(Icons.chat_bubble_rounded, color: AppTheme.whatsappGreen, size: 16),
         tooltip: '$label ($phone)',
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.all(2),
+        constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
         onPressed: () => WhatsAppHelper.launchWhatsApp(context, phone, message),
       );
     }
 
     return ElevatedButton.icon(
-      icon: const Icon(Icons.chat_bubble_rounded, size: 16, color: Colors.white),
-      label: Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+      icon: const Icon(Icons.chat_bubble_rounded, size: 14, color: Colors.white),
+      label: Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11)),
       style: ElevatedButton.styleFrom(
         backgroundColor: AppTheme.whatsappGreen,
         foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         elevation: 0,
       ),
       onPressed: () => WhatsAppHelper.launchWhatsApp(context, phone, message),
