@@ -2483,9 +2483,9 @@ class _BookingsViewState extends State<BookingsView> {
                     int crossAxisCount = 3;
                     if (width >= 1550) {
                       crossAxisCount = 4;
-                    } else if (width >= 1100) {
+                    } else if (width >= 1150) {
                       crossAxisCount = 3;
-                    } else if (width >= 680) {
+                    } else if (width >= 720) {
                       crossAxisCount = 2;
                     } else {
                       crossAxisCount = 1;
@@ -2498,7 +2498,7 @@ class _BookingsViewState extends State<BookingsView> {
                         crossAxisCount: crossAxisCount,
                         crossAxisSpacing: 14,
                         mainAxisSpacing: 14,
-                        mainAxisExtent: 265,
+                        mainAxisExtent: 335,
                       ),
                       itemCount: filteredList.length,
                       itemBuilder: (context, idx) {
@@ -3087,7 +3087,7 @@ class _BookingsViewState extends State<BookingsView> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -3100,18 +3100,18 @@ class _BookingsViewState extends State<BookingsView> {
           children: [
             // Top status accent stripe
             Container(
-              height: 3,
+              height: 3.5,
               color: b.hasCaregiverChangeRequest ? AppTheme.rose500 : statusAccentColor,
             ),
 
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // 1. Header Row: Booking Code, NEW tag, Payment Status, Status Badge Dropdown
+                    // 1. Header Row: Booking Code, NEW tag, and Status Badge Dropdown
                     Row(
                       children: [
                         InkWell(
@@ -3124,77 +3124,69 @@ class _BookingsViewState extends State<BookingsView> {
                                 b.bookingCode,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
-                                  fontSize: 12,
+                                  fontSize: 12.5,
                                   color: AppTheme.primaryBlue,
                                   decoration: TextDecoration.underline,
                                 ),
                               ),
-                              const SizedBox(width: 3),
+                              const SizedBox(width: 4),
                               const Icon(Icons.open_in_new_rounded, size: 11, color: AppTheme.primaryBlue),
                             ],
                           ),
                         ),
                         if (b.isNewWeb) ...[
-                          const SizedBox(width: 5),
+                          const SizedBox(width: 6),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                             decoration: BoxDecoration(
                               color: const Color(0xFFFEF3C7),
-                              borderRadius: BorderRadius.circular(3),
+                              borderRadius: BorderRadius.circular(4),
                               border: Border.all(color: const Color(0xFFF59E0B)),
                             ),
                             child: const Text(
                               'NEW',
-                              style: TextStyle(fontSize: 7.5, fontWeight: FontWeight.w900, color: Color(0xFFB45309)),
+                              style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFFB45309)),
                             ),
                           ),
                         ],
                         const Spacer(),
-                        _buildPaymentBadge(
-                          b.paymentStatus,
-                          () {
-                            final nextStatus = b.paymentStatus == 'unpaid'
-                                ? 'advance_paid'
-                                : (b.paymentStatus == 'advance_paid' ? 'fully_paid' : 'unpaid');
-                            provider.updateBookingPaymentStatus(b.id, nextStatus);
-                          },
-                        ),
-                        const SizedBox(width: 5),
-                        PopupMenuButton<String>(
-                          initialValue: b.status,
-                          tooltip: 'Change Workflow Status',
-                          onSelected: (val) {
-                            if (val != b.status) {
-                              _showStatusChangeConfirmDialog(context, b, val);
-                            }
-                          },
-                          child: _buildStatusBadge(b.status, booking: b),
-                          itemBuilder: (ctx) => const [
-                            PopupMenuItem(value: 'pending_review', child: Text('Pending Review / New Web', style: TextStyle(fontSize: 11))),
-                            PopupMenuItem(value: 'in_process', child: Text('In Process (Ops Hold)', style: TextStyle(fontSize: 11))),
-                            PopupMenuItem(value: 'broadcasted', child: Text('Released to Staff Apps', style: TextStyle(fontSize: 11))),
-                            PopupMenuItem(value: 'caregiver_assigned', child: Text('Caregiver Assigned', style: TextStyle(fontSize: 11))),
-                            PopupMenuItem(value: 'in_progress', child: Text('On Duty', style: TextStyle(fontSize: 11))),
-                            PopupMenuItem(value: 'completed', child: Text('Completed', style: TextStyle(fontSize: 11))),
-                          ],
+                        Flexible(
+                          child: PopupMenuButton<String>(
+                            initialValue: b.status,
+                            tooltip: 'Change Workflow Status',
+                            onSelected: (val) {
+                              if (val != b.status) {
+                                _showStatusChangeConfirmDialog(context, b, val);
+                              }
+                            },
+                            child: _buildStatusBadge(b.status, booking: b),
+                            itemBuilder: (ctx) => const [
+                              PopupMenuItem(value: 'pending_review', child: Text('Pending Review / New Web', style: TextStyle(fontSize: 11))),
+                              PopupMenuItem(value: 'in_process', child: Text('In Process (Ops Hold)', style: TextStyle(fontSize: 11))),
+                              PopupMenuItem(value: 'broadcasted', child: Text('Released to Staff Apps', style: TextStyle(fontSize: 11))),
+                              PopupMenuItem(value: 'caregiver_assigned', child: Text('Caregiver Assigned', style: TextStyle(fontSize: 11))),
+                              PopupMenuItem(value: 'in_progress', child: Text('On Duty', style: TextStyle(fontSize: 11))),
+                              PopupMenuItem(value: 'completed', child: Text('Completed', style: TextStyle(fontSize: 11))),
+                            ],
+                          ),
                         ),
                       ],
                     ),
 
                     // 2. Patient Details & Mobility Row
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          width: 26,
-                          height: 26,
+                          width: 28,
+                          height: 28,
                           decoration: BoxDecoration(
                             color: AppTheme.slate100,
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Icon(Icons.person_rounded, size: 16, color: AppTheme.slate600),
+                          child: const Icon(Icons.person_rounded, size: 17, color: AppTheme.slate600),
                         ),
-                        const SizedBox(width: 7),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -3202,30 +3194,25 @@ class _BookingsViewState extends State<BookingsView> {
                             children: [
                               Row(
                                 children: [
-                                  Flexible(
+                                  Expanded(
                                     child: Text(
-                                      b.patientName,
+                                      '${b.patientName} (${b.patientAge}y, ${b.patientGender})',
                                       style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppTheme.slate900),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                   const SizedBox(width: 4),
-                                  Text(
-                                    '(${b.patientAge}y, ${b.patientGender})',
-                                    style: const TextStyle(fontSize: 9.5, color: AppTheme.slate500, fontWeight: FontWeight.w500),
-                                  ),
-                                  const SizedBox(width: 5),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                                     decoration: BoxDecoration(
                                       color: b.mobility == 'bedridden' ? AppTheme.rose100 : AppTheme.slate100,
-                                      borderRadius: BorderRadius.circular(3),
+                                      borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
                                       b.mobility.toUpperCase().replaceAll('_', ' '),
                                       style: TextStyle(
-                                        fontSize: 7.5,
+                                        fontSize: 8,
                                         fontWeight: FontWeight.bold,
                                         color: b.mobility == 'bedridden' ? AppTheme.rose800 : AppTheme.slate700,
                                       ),
@@ -3233,10 +3220,10 @@ class _BookingsViewState extends State<BookingsView> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 1.5),
+                              const SizedBox(height: 2),
                               Row(
                                 children: [
-                                  const Icon(Icons.location_on_outlined, size: 10, color: AppTheme.slate400),
+                                  const Icon(Icons.location_on_outlined, size: 10.5, color: AppTheme.slate400),
                                   const SizedBox(width: 2),
                                   Expanded(
                                     child: Text(
@@ -3251,7 +3238,7 @@ class _BookingsViewState extends State<BookingsView> {
                                     InkWell(
                                       onTap: () => launchUrl(Uri.parse(b.effectiveMapsUrl)),
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFEFF6FF),
                                           borderRadius: BorderRadius.circular(3),
@@ -3279,121 +3266,148 @@ class _BookingsViewState extends State<BookingsView> {
                       ],
                     ),
 
-                    // 3. Compact Integrated Service & Assigned Caregiver Container
+                    // 3. Service & Shift Details Card
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5.5),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(7),
                         border: Border.all(color: AppTheme.slate200.withOpacity(0.8)),
                       ),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Service & Duration
                           Expanded(
-                            flex: 5,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
                                   b.serviceName,
-                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 10.5, color: AppTheme.slate800),
+                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, color: AppTheme.slate800),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 1.5),
                                 Text(
-                                  '${b.staffTierName} • ${b.shiftHours}h • ${b.durationDays}d (${b.remainingDays}d left)',
-                                  style: const TextStyle(fontSize: 9, color: AppTheme.primaryBlue, fontWeight: FontWeight.w600),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  '${b.staffTierName} • ${b.shiftHours}h/day',
+                                  style: const TextStyle(fontSize: 9.5, color: AppTheme.primaryBlue, fontWeight: FontWeight.w600),
                                 ),
                               ],
                             ),
                           ),
-                          Container(width: 1, height: 24, color: AppTheme.slate200),
-                          const SizedBox(width: 7),
-                          // Caregiver & Duty Beacon
-                          Expanded(
-                            flex: 5,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        b.assignedCaregiverName ?? 'No Caregiver',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 10,
-                                          color: b.assignedCaregiverName != null ? const Color(0xFF14532D) : AppTheme.rose800,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 1.5),
-                                      if (b.assignedCaregiverName != null)
-                                        Row(
-                                          children: [
-                                            Container(
-                                              width: 5,
-                                              height: 5,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: b.isCaregiverCheckedIn ? const Color(0xFF16A34A) : Colors.amber.shade700,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 3),
-                                            Text(
-                                              b.isCaregiverCheckedIn ? 'On Duty' : 'Awaiting Check-in',
-                                              style: TextStyle(
-                                                fontSize: 8.5,
-                                                fontWeight: FontWeight.w700,
-                                                color: b.isCaregiverCheckedIn ? const Color(0xFF15803D) : Colors.amber.shade900,
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                      else
-                                        const Text('Assign staff', style: TextStyle(fontSize: 8.5, color: AppTheme.rose500)),
-                                    ],
-                                  ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '${b.durationDays} Days',
+                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: AppTheme.slate800),
+                              ),
+                              const SizedBox(height: 1.5),
+                              Text(
+                                b.isCompleted ? 'Finished' : '${b.remainingDays}d left',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: b.isCompleted ? AppTheme.slate500 : const Color(0xFF0D9488),
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.edit_note_rounded, size: 16, color: AppTheme.primaryBlue),
-                                  tooltip: 'Assign or Change Caregiver',
-                                  visualDensity: VisualDensity.compact,
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
-                                  onPressed: () => _showAssignCaregiverDialog(context, b),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
 
-                    // 4. Caregiver Replacement Alert Banner (If Requested)
+                    // 4. Assigned Caregiver Card + Check-in Beacon
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: b.assignedCaregiverName != null ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
+                        borderRadius: BorderRadius.circular(7),
+                        border: Border.all(
+                          color: b.assignedCaregiverName != null
+                              ? const Color(0xFF86EFAC)
+                              : const Color(0xFFFECACA),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            b.assignedCaregiverName != null ? Icons.assignment_ind_rounded : Icons.person_off_outlined,
+                            size: 15,
+                            color: b.assignedCaregiverName != null ? const Color(0xFF15803D) : AppTheme.rose500,
+                          ),
+                          const SizedBox(width: 7),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  b.assignedCaregiverName ?? 'No Caregiver Assigned',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 10.5,
+                                    color: b.assignedCaregiverName != null ? const Color(0xFF14532D) : AppTheme.rose800,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 1),
+                                if (b.assignedCaregiverName != null)
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 5.5,
+                                        height: 5.5,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: b.isCaregiverCheckedIn ? const Color(0xFF16A34A) : Colors.amber.shade700,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 3.5),
+                                      Text(
+                                        b.isCaregiverCheckedIn ? 'On Duty (Checked In)' : 'Awaiting Check-In',
+                                        style: TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w700,
+                                          color: b.isCaregiverCheckedIn ? const Color(0xFF15803D) : Colors.amber.shade900,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                else
+                                  const Text('Awaiting dispatch or queue', style: TextStyle(fontSize: 8.5, color: AppTheme.rose500)),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.edit_note_rounded, size: 16, color: AppTheme.primaryBlue),
+                            tooltip: 'Assign or Change Caregiver',
+                            visualDensity: VisualDensity.compact,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                            onPressed: () => _showAssignCaregiverDialog(context, b),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // 5. Caregiver Replacement Alert Banner (If Requested)
                     if (b.hasCaregiverChangeRequest)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFF1F2),
-                          borderRadius: BorderRadius.circular(5),
+                          borderRadius: BorderRadius.circular(6),
                           border: Border.all(color: const Color(0xFFFDA4AF)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.warning_amber_rounded, size: 12, color: AppTheme.rose600),
-                            const SizedBox(width: 4),
+                            const Icon(Icons.warning_amber_rounded, size: 13, color: AppTheme.rose600),
+                            const SizedBox(width: 5),
                             Expanded(
                               child: Text(
                                 'Change Req: ${b.caregiverChangeReason.isNotEmpty ? b.caregiverChangeReason : b.caregiverChangeCategory}',
-                                style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.bold, color: Color(0xFF9F1239)),
+                                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF9F1239)),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -3402,31 +3416,46 @@ class _BookingsViewState extends State<BookingsView> {
                         ),
                       ),
 
-                    // 5. Financials Row
+                    // 6. Financials Row & Payment Badge (Together for clarity!)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Client: LKR ${currency.format(b.totalCostLKR)}',
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: AppTheme.slate900),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Client: LKR ${currency.format(b.totalCostLKR)}',
+                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: AppTheme.slate900),
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              'Staff: LKR ${currency.format(b.staffTotalPayoutLKR)}',
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 9.5, color: Color(0xFF0D9488)),
+                            ),
+                          ],
                         ),
-                        Text(
-                          'Staff: LKR ${currency.format(b.staffTotalPayoutLKR)}',
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 9.5, color: Color(0xFF0D9488)),
+                        _buildPaymentBadge(
+                          b.paymentStatus,
+                          () {
+                            final nextStatus = b.paymentStatus == 'unpaid'
+                                ? 'advance_paid'
+                                : (b.paymentStatus == 'advance_paid' ? 'fully_paid' : 'unpaid');
+                            provider.updateBookingPaymentStatus(b.id, nextStatus);
+                          },
                         ),
                       ],
                     ),
 
                     const Divider(height: 1, thickness: 1, color: AppTheme.slate200),
 
-                    // 6. Compact Operational Actions Bar
+                    // 7. Compact Operational Actions Bar
                     Row(
                       children: [
                         // Primary Workflow Action
                         if (b.isNewWeb) ...[
                           Expanded(
                             child: SizedBox(
-                              height: 27,
+                              height: 28,
                               child: ElevatedButton.icon(
                                 onPressed: () => provider.markBookingInProcess(b.id),
                                 icon: const Icon(Icons.check_circle_outline_rounded, size: 11),
@@ -3445,7 +3474,7 @@ class _BookingsViewState extends State<BookingsView> {
                         ] else if (b.isInProcess) ...[
                           Expanded(
                             child: SizedBox(
-                              height: 27,
+                              height: 28,
                               child: ElevatedButton.icon(
                                 onPressed: () => provider.broadcastBookingToStaff(b.id),
                                 icon: const Icon(Icons.cell_tower_rounded, size: 11),
@@ -3464,7 +3493,7 @@ class _BookingsViewState extends State<BookingsView> {
                         ] else if (b.isBroadcasted) ...[
                           Expanded(
                             child: SizedBox(
-                              height: 27,
+                              height: 28,
                               child: ElevatedButton.icon(
                                 onPressed: () => BookingQueueDispatchDialog.show(context, b),
                                 icon: const Icon(Icons.flash_on_rounded, size: 11),
@@ -3483,7 +3512,7 @@ class _BookingsViewState extends State<BookingsView> {
                         ] else ...[
                           Expanded(
                             child: SizedBox(
-                              height: 27,
+                              height: 28,
                               child: OutlinedButton.icon(
                                 onPressed: () => BookingQueueDispatchDialog.show(context, b),
                                 icon: const Icon(Icons.visibility_rounded, size: 11),
@@ -3511,8 +3540,8 @@ class _BookingsViewState extends State<BookingsView> {
                             ),
                             borderRadius: BorderRadius.circular(6),
                             child: Container(
-                              width: 27,
-                              height: 27,
+                              width: 28,
+                              height: 28,
                               decoration: BoxDecoration(
                                 color: const Color(0xFFDCFCE7),
                                 borderRadius: BorderRadius.circular(6),
@@ -3536,8 +3565,8 @@ class _BookingsViewState extends State<BookingsView> {
                               ),
                               borderRadius: BorderRadius.circular(6),
                               child: Container(
-                                width: 27,
-                                height: 27,
+                                width: 28,
+                                height: 28,
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFE0F2FE),
                                   borderRadius: BorderRadius.circular(6),
@@ -3556,7 +3585,7 @@ class _BookingsViewState extends State<BookingsView> {
                           tooltip: 'Print Invoice',
                           visualDensity: VisualDensity.compact,
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 25, minHeight: 25),
+                          constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
                           onPressed: () => InvoiceDialog.show(context, b),
                         ),
 
@@ -3566,7 +3595,7 @@ class _BookingsViewState extends State<BookingsView> {
                           tooltip: 'Full Dossier',
                           visualDensity: VisualDensity.compact,
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 25, minHeight: 25),
+                          constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
                           onPressed: () => _showBookingDetailsDialog(context, b),
                         ),
 
@@ -3576,7 +3605,7 @@ class _BookingsViewState extends State<BookingsView> {
                           tooltip: 'Delete Booking',
                           visualDensity: VisualDensity.compact,
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 25, minHeight: 25),
+                          constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
                           onPressed: () => _showDeleteConfirmDialog(context, b),
                         ),
                       ],
