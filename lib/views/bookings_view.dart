@@ -1527,6 +1527,10 @@ class _BookingsViewState extends State<BookingsView> {
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 const Text('Customer Requested Care Worker Change:', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.rose500)),
+                                                if (currentBooking.caregiverChangeCategory.isNotEmpty) ...[
+                                                  const SizedBox(height: 2),
+                                                  Text('Reason: ${currentBooking.caregiverChangeCategory}', style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: AppTheme.slate800)),
+                                                ],
                                                 Text('"${currentBooking.caregiverChangeReason}"', style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: AppTheme.slate800)),
                                               ],
                                             ),

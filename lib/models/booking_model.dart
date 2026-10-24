@@ -98,6 +98,7 @@ class BookingModel {
 
   bool get hasCaregiverChangeRequest => caregiverChangeRequest != null && caregiverChangeRequest!['requested'] == true;
   String get caregiverChangeReason => caregiverChangeRequest?['reason']?.toString() ?? '';
+  String get caregiverChangeCategory => caregiverChangeRequest?['categoryLabel']?.toString() ?? caregiverChangeRequest?['category']?.toString() ?? '';
 
   bool get isNewWeb => status == 'pending_review' || status == 'new_web';
   bool get isInProcess => status == 'in_process' || status == 'under_review';
