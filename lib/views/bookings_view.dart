@@ -1492,8 +1492,46 @@ class _BookingsViewState extends State<BookingsView> {
                                       ),
                                       const SizedBox(width: 6),
                                       const Text('Assigned Caregiver', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5)),
+                                      if (currentBooking.hasCaregiverChangeRequest) ...[
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.rose500,
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: const Text('CHANGE REQUESTED', style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.black, color: Colors.white)),
+                                        ),
+                                      ],
                                     ],
                                   ),
+                                  if (currentBooking.hasCaregiverChangeRequest) ...[
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.rose100.withOpacity(0.5),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: AppTheme.rose500.withOpacity(0.4)),
+                                      ),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Icon(Icons.warning_amber_rounded, color: AppTheme.rose500, size: 16),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text('Customer Requested Care Worker Change:', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.rose500)),
+                                                Text('"${currentBooking.caregiverChangeReason}"', style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: AppTheme.slate800)),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                   const SizedBox(height: 8),
                                   if (currentBooking.assignedCaregiverName != null) ...[
                                     _infoItem('Caregiver Name', currentBooking.assignedCaregiverName!),
@@ -1567,53 +1605,87 @@ class _BookingsViewState extends State<BookingsView> {
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: AppTheme.slate200),
                         ),
-                        child: Row(
+                        child: Column(
                           children: [
-                            // Status selector
-                            const Text('Workflow Status: ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.slate700)),
-                            const SizedBox(width: 6),
-                            DropdownButton<String>(
-                              value: currentBooking.status,
-                              isDense: true,
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.slate900),
-                              underline: const SizedBox(),
-                              items: const [
-                                DropdownMenuItem(value: 'pending_review', child: Text('Pending Review')),
-                                DropdownMenuItem(value: 'caregiver_assigned', child: Text('Caregiver Assigned')),
-                                DropdownMenuItem(value: 'in_progress', child: Text('On Duty')),
-                                DropdownMenuItem(value: 'completed', child: Text('Completed')),
+                            Row(
+                              children: [
+                                // Status selector
+                                const Text('Workflow Status: ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.slate700)),
+                                const SizedBox(width: 6),
+                                DropdownButton<String>(
+                                  value: currentBooking.status,
+                                  isDense: true,
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.slate900),
+                                  underline: const SizedBox(),
+                                  items: const [
+                                    DropdownMenuItem(value: 'pending_review', child: Text('Pending Review')),
+                                    DropdownMenuItem(value: 'caregiver_assigned', child: Text('Caregiver Assigned')),
+                                    DropdownMenuItem(value: 'in_progress', child: Text('On Duty')),
+                                    DropdownMenuItem(value: 'completed', child: Text('Completed')),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null && val != currentBooking.status) {
+                                      _showStatusChangeConfirmDialog(
+                                        context,
+                                        currentBooking,
+                                        val,
+                                        onConfirmed: () => setDialogState(() {}),
+                                      );
+                                    }
+                                  },
+                                ),
+                                const Spacer(),
+                                // Payment Status selector
+                                const Text('Payment: ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.slate700)),
+                                const SizedBox(width: 6),
+                                DropdownButton<String>(
+                                  value: currentBooking.paymentStatus,
+                                  isDense: true,
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.slate900),
+                                  underline: const SizedBox(),
+                                  items: const [
+                                    DropdownMenuItem(value: 'unpaid', child: Text('Unpaid')),
+                                    DropdownMenuItem(value: 'advance_paid', child: Text('Advance Paid')),
+                                    DropdownMenuItem(value: 'fully_paid', child: Text('Fully Paid')),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      provider.updateBookingPaymentStatus(currentBooking.id, val);
+                                      setDialogState(() {});
+                                    }
+                                  },
+                                ),
                               ],
-                              onChanged: (val) {
-                                if (val != null && val != currentBooking.status) {
-                                  _showStatusChangeConfirmDialog(
-                                    context,
-                                    currentBooking,
-                                    val,
-                                    onConfirmed: () => setDialogState(() {}),
-                                  );
-                                }
-                              },
                             ),
-                            const Spacer(),
-                            // Payment Status selector
-                            const Text('Payment: ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.slate700)),
-                            const SizedBox(width: 6),
-                            DropdownButton<String>(
-                              value: currentBooking.paymentStatus,
-                              isDense: true,
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.slate900),
-                              underline: const SizedBox(),
-                              items: const [
-                                DropdownMenuItem(value: 'unpaid', child: Text('Unpaid')),
-                                DropdownMenuItem(value: 'advance_paid', child: Text('Advance Paid')),
-                                DropdownMenuItem(value: 'fully_paid', child: Text('Fully Paid')),
+                            const Divider(height: 12, color: AppTheme.slate200),
+                            Row(
+                              children: [
+                                Icon(
+                                  currentBooking.paymentMethod == 'bank_transfer' ? Icons.account_balance_rounded : Icons.payments_rounded,
+                                  size: 14,
+                                  color: currentBooking.paymentMethod == 'bank_transfer' ? AppTheme.primaryBlue : AppTheme.emerald600,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  'Payment Method: ${currentBooking.paymentMethod == 'bank_transfer' ? 'Direct Bank Transfer' : 'Cash to Caregiver on Duty'}',
+                                  style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: AppTheme.slate700),
+                                ),
+                                if (currentBooking.advanceAmountLKR > 0) ...[
+                                  const Spacer(),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.blueLight,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.3)),
+                                    ),
+                                    child: Text(
+                                      'Advance: LKR ${currentBooking.advanceAmountLKR.toStringAsFixed(0)}',
+                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                                    ),
+                                  ),
+                                ],
                               ],
-                              onChanged: (val) {
-                                if (val != null) {
-                                  provider.updateBookingPaymentStatus(currentBooking.id, val);
-                                  setDialogState(() {});
-                                }
-                              },
                             ),
                           ],
                         ),
