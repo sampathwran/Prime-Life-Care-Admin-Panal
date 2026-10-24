@@ -2498,7 +2498,7 @@ class _BookingsViewState extends State<BookingsView> {
                         crossAxisCount: crossAxisCount,
                         crossAxisSpacing: 14,
                         mainAxisSpacing: 14,
-                        mainAxisExtent: 425,
+                        mainAxisExtent: 265,
                       ),
                       itemCount: filteredList.length,
                       itemBuilder: (context, idx) {
@@ -3080,38 +3080,38 @@ class _BookingsViewState extends State<BookingsView> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: b.hasCaregiverChangeRequest ? AppTheme.rose200 : AppTheme.slate200,
           width: b.hasCaregiverChangeRequest ? 1.5 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Top status accent stripe
             Container(
-              height: 4,
+              height: 3,
               color: b.hasCaregiverChangeRequest ? AppTheme.rose500 : statusAccentColor,
             ),
 
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // 1. Header Row: Booking Code, Status Badge, Workflow Menu
+                    // 1. Header Row: Booking Code, NEW tag, Payment Status, Status Badge Dropdown
                     Row(
                       children: [
                         InkWell(
@@ -3124,32 +3124,42 @@ class _BookingsViewState extends State<BookingsView> {
                                 b.bookingCode,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
-                                  fontSize: 13,
+                                  fontSize: 12,
                                   color: AppTheme.primaryBlue,
                                   decoration: TextDecoration.underline,
                                 ),
                               ),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.open_in_new_rounded, size: 12, color: AppTheme.primaryBlue),
+                              const SizedBox(width: 3),
+                              const Icon(Icons.open_in_new_rounded, size: 11, color: AppTheme.primaryBlue),
                             ],
                           ),
                         ),
                         if (b.isNewWeb) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 5),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                             decoration: BoxDecoration(
                               color: const Color(0xFFFEF3C7),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(3),
                               border: Border.all(color: const Color(0xFFF59E0B)),
                             ),
                             child: const Text(
                               'NEW',
-                              style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w900, color: Color(0xFFB45309)),
+                              style: TextStyle(fontSize: 7.5, fontWeight: FontWeight.w900, color: Color(0xFFB45309)),
                             ),
                           ),
                         ],
                         const Spacer(),
+                        _buildPaymentBadge(
+                          b.paymentStatus,
+                          () {
+                            final nextStatus = b.paymentStatus == 'unpaid'
+                                ? 'advance_paid'
+                                : (b.paymentStatus == 'advance_paid' ? 'fully_paid' : 'unpaid');
+                            provider.updateBookingPaymentStatus(b.id, nextStatus);
+                          },
+                        ),
+                        const SizedBox(width: 5),
                         PopupMenuButton<String>(
                           initialValue: b.status,
                           tooltip: 'Change Workflow Status',
@@ -3173,43 +3183,49 @@ class _BookingsViewState extends State<BookingsView> {
 
                     // 2. Patient Details & Mobility Row
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Container(
-                          width: 34,
-                          height: 34,
+                          width: 26,
+                          height: 26,
                           decoration: BoxDecoration(
                             color: AppTheme.slate100,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Icon(Icons.person_rounded, size: 20, color: AppTheme.slate600),
+                          child: const Icon(Icons.person_rounded, size: 16, color: AppTheme.slate600),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 7),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Row(
                                 children: [
-                                  Expanded(
+                                  Flexible(
                                     child: Text(
                                       b.patientName,
-                                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppTheme.slate900),
+                                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppTheme.slate900),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  const SizedBox(width: 6),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '(${b.patientAge}y, ${b.patientGender})',
+                                    style: const TextStyle(fontSize: 9.5, color: AppTheme.slate500, fontWeight: FontWeight.w500),
+                                  ),
+                                  const SizedBox(width: 5),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                     decoration: BoxDecoration(
                                       color: b.mobility == 'bedridden' ? AppTheme.rose100 : AppTheme.slate100,
-                                      borderRadius: BorderRadius.circular(4),
+                                      borderRadius: BorderRadius.circular(3),
                                     ),
                                     child: Text(
                                       b.mobility.toUpperCase().replaceAll('_', ' '),
                                       style: TextStyle(
-                                        fontSize: 8.5,
+                                        fontSize: 7.5,
                                         fontWeight: FontWeight.bold,
                                         color: b.mobility == 'bedridden' ? AppTheme.rose800 : AppTheme.slate700,
                                       ),
@@ -3217,22 +3233,15 @@ class _BookingsViewState extends State<BookingsView> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${b.patientAge} Yrs • ${b.patientGender} • Ph: ${b.contactPhone}',
-                                style: const TextStyle(fontSize: 10, color: AppTheme.slate500),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: 1.5),
                               Row(
                                 children: [
-                                  const Icon(Icons.location_on_outlined, size: 11, color: AppTheme.slate400),
+                                  const Icon(Icons.location_on_outlined, size: 10, color: AppTheme.slate400),
                                   const SizedBox(width: 2),
                                   Expanded(
                                     child: Text(
-                                      '${b.city}, ${b.district}',
-                                      style: const TextStyle(fontSize: 10, color: AppTheme.slate600, fontWeight: FontWeight.w500),
+                                      '${b.city}, ${b.district} • Ph: ${b.contactPhone}',
+                                      style: const TextStyle(fontSize: 9.5, color: AppTheme.slate600),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -3242,20 +3251,20 @@ class _BookingsViewState extends State<BookingsView> {
                                     InkWell(
                                       onTap: () => launchUrl(Uri.parse(b.effectiveMapsUrl)),
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFEFF6FF),
-                                          borderRadius: BorderRadius.circular(4),
+                                          borderRadius: BorderRadius.circular(3),
                                           border: Border.all(color: const Color(0xFF3B82F6).withOpacity(0.3)),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: const [
-                                            Icon(Icons.map_rounded, size: 9.5, color: Color(0xFF2563EB)),
+                                            Icon(Icons.map_rounded, size: 8.5, color: Color(0xFF2563EB)),
                                             SizedBox(width: 2),
                                             Text(
-                                              'Maps ↗',
-                                              style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w700, color: Color(0xFF1D4ED8)),
+                                              'Maps',
+                                              style: TextStyle(fontSize: 8, fontWeight: FontWeight.w700, color: Color(0xFF1D4ED8)),
                                             ),
                                           ],
                                         ),
@@ -3270,153 +3279,121 @@ class _BookingsViewState extends State<BookingsView> {
                       ],
                     ),
 
-                    // 3. Service & Shift Details Card
+                    // 3. Compact Integrated Service & Assigned Caregiver Container
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppTheme.slate200.withOpacity(0.7)),
+                        borderRadius: BorderRadius.circular(7),
+                        border: Border.all(color: AppTheme.slate200.withOpacity(0.8)),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
+                          // Service & Duration
                           Expanded(
+                            flex: 5,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
                                   b.serviceName,
-                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, color: AppTheme.slate800),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${b.staffTierName} • ${b.shiftHours}h/day',
-                                  style: const TextStyle(fontSize: 9.5, color: AppTheme.primaryBlue, fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                '${b.durationDays} Days',
-                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: AppTheme.slate800),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                b.isCompleted
-                                    ? 'Finished'
-                                    : '${b.remainingDays}d remaining',
-                                style: TextStyle(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: b.isCompleted ? AppTheme.slate500 : const Color(0xFF0D9488),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // 4. Assigned Caregiver Card + Check-in Beacon
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: b.assignedCaregiverName != null ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: b.assignedCaregiverName != null
-                              ? const Color(0xFF86EFAC)
-                              : const Color(0xFFFECACA),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            b.assignedCaregiverName != null ? Icons.assignment_ind_rounded : Icons.person_off_outlined,
-                            size: 16,
-                            color: b.assignedCaregiverName != null ? const Color(0xFF15803D) : AppTheme.rose500,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  b.assignedCaregiverName ?? 'No Caregiver Assigned',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 11,
-                                    color: b.assignedCaregiverName != null ? const Color(0xFF14532D) : AppTheme.rose800,
-                                  ),
+                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 10.5, color: AppTheme.slate800),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 1.5),
-                                if (b.assignedCaregiverName != null)
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 6,
-                                        height: 6,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: b.isCaregiverCheckedIn ? const Color(0xFF16A34A) : Colors.amber.shade700,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        b.isCaregiverCheckedIn ? 'On Duty (Checked In)' : 'Awaiting Check-In',
-                                        style: TextStyle(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w700,
-                                          color: b.isCaregiverCheckedIn ? const Color(0xFF15803D) : Colors.amber.shade900,
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                else
-                                  const Text(
-                                    'Awaiting dispatch or queue',
-                                    style: TextStyle(fontSize: 9, color: AppTheme.rose500),
-                                  ),
+                                Text(
+                                  '${b.staffTierName} • ${b.shiftHours}h • ${b.durationDays}d (${b.remainingDays}d left)',
+                                  style: const TextStyle(fontSize: 9, color: AppTheme.primaryBlue, fontWeight: FontWeight.w600),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ],
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.edit_note_rounded, size: 17, color: AppTheme.primaryBlue),
-                            tooltip: 'Assign or Change Caregiver',
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
-                            onPressed: () => _showAssignCaregiverDialog(context, b),
+                          Container(width: 1, height: 24, color: AppTheme.slate200),
+                          const SizedBox(width: 7),
+                          // Caregiver & Duty Beacon
+                          Expanded(
+                            flex: 5,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        b.assignedCaregiverName ?? 'No Caregiver',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 10,
+                                          color: b.assignedCaregiverName != null ? const Color(0xFF14532D) : AppTheme.rose800,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 1.5),
+                                      if (b.assignedCaregiverName != null)
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 5,
+                                              height: 5,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: b.isCaregiverCheckedIn ? const Color(0xFF16A34A) : Colors.amber.shade700,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 3),
+                                            Text(
+                                              b.isCaregiverCheckedIn ? 'On Duty' : 'Awaiting Check-in',
+                                              style: TextStyle(
+                                                fontSize: 8.5,
+                                                fontWeight: FontWeight.w700,
+                                                color: b.isCaregiverCheckedIn ? const Color(0xFF15803D) : Colors.amber.shade900,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      else
+                                        const Text('Assign staff', style: TextStyle(fontSize: 8.5, color: AppTheme.rose500)),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit_note_rounded, size: 16, color: AppTheme.primaryBlue),
+                                  tooltip: 'Assign or Change Caregiver',
+                                  visualDensity: VisualDensity.compact,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+                                  onPressed: () => _showAssignCaregiverDialog(context, b),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
 
-                    // 5. Caregiver Replacement Alert Banner (If Requested)
+                    // 4. Caregiver Replacement Alert Banner (If Requested)
                     if (b.hasCaregiverChangeRequest)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFF1F2),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(5),
                           border: Border.all(color: const Color(0xFFFDA4AF)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.warning_amber_rounded, size: 14, color: AppTheme.rose600),
-                            const SizedBox(width: 6),
+                            const Icon(Icons.warning_amber_rounded, size: 12, color: AppTheme.rose600),
+                            const SizedBox(width: 4),
                             Expanded(
                               child: Text(
-                                'Replacement Request: ${b.caregiverChangeReason.isNotEmpty ? b.caregiverChangeReason : b.caregiverChangeCategory}',
-                                style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFF9F1239)),
+                                'Change Req: ${b.caregiverChangeReason.isNotEmpty ? b.caregiverChangeReason : b.caregiverChangeCategory}',
+                                style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.bold, color: Color(0xFF9F1239)),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -3425,101 +3402,98 @@ class _BookingsViewState extends State<BookingsView> {
                         ),
                       ),
 
-                    // 6. Financials Row & Payment Badge
+                    // 5. Financials Row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Client: LKR ${currency.format(b.totalCostLKR)}',
-                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11.5, color: AppTheme.slate900),
-                            ),
-                            const SizedBox(height: 1),
-                            Text(
-                              'Staff: LKR ${currency.format(b.staffTotalPayoutLKR)}',
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 9.5, color: Color(0xFF0D9488)),
-                            ),
-                          ],
+                        Text(
+                          'Client: LKR ${currency.format(b.totalCostLKR)}',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: AppTheme.slate900),
                         ),
-                        _buildPaymentBadge(
-                          b.paymentStatus,
-                          () {
-                            final nextStatus = b.paymentStatus == 'unpaid'
-                                ? 'advance_paid'
-                                : (b.paymentStatus == 'advance_paid' ? 'fully_paid' : 'unpaid');
-                            provider.updateBookingPaymentStatus(b.id, nextStatus);
-                          },
+                        Text(
+                          'Staff: LKR ${currency.format(b.staffTotalPayoutLKR)}',
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 9.5, color: Color(0xFF0D9488)),
                         ),
                       ],
                     ),
 
                     const Divider(height: 1, thickness: 1, color: AppTheme.slate200),
 
-                    // 7. Operational Actions Bar
+                    // 6. Compact Operational Actions Bar
                     Row(
                       children: [
-                        // Status Action Button
+                        // Primary Workflow Action
                         if (b.isNewWeb) ...[
                           Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => provider.markBookingInProcess(b.id),
-                              icon: const Icon(Icons.check_circle_outline_rounded, size: 12),
-                              label: const Text('Accept Ops', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFEF3C7),
-                                foregroundColor: const Color(0xFF92400E),
-                                elevation: 0,
-                                side: const BorderSide(color: Color(0xFFF59E0B)),
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            child: SizedBox(
+                              height: 27,
+                              child: ElevatedButton.icon(
+                                onPressed: () => provider.markBookingInProcess(b.id),
+                                icon: const Icon(Icons.check_circle_outline_rounded, size: 11),
+                                label: const Text('Accept Ops', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFFEF3C7),
+                                  foregroundColor: const Color(0xFF92400E),
+                                  elevation: 0,
+                                  side: const BorderSide(color: Color(0xFFF59E0B)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                ),
                               ),
                             ),
                           ),
                         ] else if (b.isInProcess) ...[
                           Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => provider.broadcastBookingToStaff(b.id),
-                              icon: const Icon(Icons.cell_tower_rounded, size: 12),
-                              label: const Text('Release to App', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFAF5FF),
-                                foregroundColor: const Color(0xFF6B21A8),
-                                elevation: 0,
-                                side: const BorderSide(color: Color(0xFFA855F7)),
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            child: SizedBox(
+                              height: 27,
+                              child: ElevatedButton.icon(
+                                onPressed: () => provider.broadcastBookingToStaff(b.id),
+                                icon: const Icon(Icons.cell_tower_rounded, size: 11),
+                                label: const Text('Release', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFFAF5FF),
+                                  foregroundColor: const Color(0xFF6B21A8),
+                                  elevation: 0,
+                                  side: const BorderSide(color: Color(0xFFA855F7)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                ),
                               ),
                             ),
                           ),
                         ] else if (b.isBroadcasted) ...[
                           Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => BookingQueueDispatchDialog.show(context, b),
-                              icon: const Icon(Icons.flash_on_rounded, size: 12),
-                              label: Text('Queue (${b.candidateQueue.length}/${b.maxCandidates})', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFAF5FF),
-                                foregroundColor: const Color(0xFF6B21A8),
-                                elevation: 0,
-                                side: const BorderSide(color: Color(0xFFA855F7)),
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            child: SizedBox(
+                              height: 27,
+                              child: ElevatedButton.icon(
+                                onPressed: () => BookingQueueDispatchDialog.show(context, b),
+                                icon: const Icon(Icons.flash_on_rounded, size: 11),
+                                label: Text('Queue (${b.candidateQueue.length}/${b.maxCandidates})', style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFFAF5FF),
+                                  foregroundColor: const Color(0xFF6B21A8),
+                                  elevation: 0,
+                                  side: const BorderSide(color: Color(0xFFA855F7)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                ),
                               ),
                             ),
                           ),
                         ] else ...[
                           Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () => BookingQueueDispatchDialog.show(context, b),
-                              icon: const Icon(Icons.visibility_rounded, size: 12),
-                              label: const Text('Queue / Care', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppTheme.primaryBlue,
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                                side: const BorderSide(color: AppTheme.primaryBlue),
+                            child: SizedBox(
+                              height: 27,
+                              child: OutlinedButton.icon(
+                                onPressed: () => BookingQueueDispatchDialog.show(context, b),
+                                icon: const Icon(Icons.visibility_rounded, size: 11),
+                                label: const Text('Queue / Care', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold)),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppTheme.primaryBlue,
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                  side: const BorderSide(color: AppTheme.primaryBlue),
+                                ),
                               ),
                             ),
                           ),
@@ -3537,17 +3511,18 @@ class _BookingsViewState extends State<BookingsView> {
                             ),
                             borderRadius: BorderRadius.circular(6),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                              width: 27,
+                              height: 27,
                               decoration: BoxDecoration(
                                 color: const Color(0xFFDCFCE7),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(color: const Color(0xFF22C55E)),
                               ),
-                              child: const Icon(Icons.chat_bubble_rounded, size: 13, color: Color(0xFF16A34A)),
+                              child: const Center(child: Icon(Icons.chat_bubble_rounded, size: 12, color: Color(0xFF16A34A))),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 3),
 
                         // WhatsApp Staff Button
                         if (b.assignedCaregiverPhone != null) ...[
@@ -3561,48 +3536,47 @@ class _BookingsViewState extends State<BookingsView> {
                               ),
                               borderRadius: BorderRadius.circular(6),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                                width: 27,
+                                height: 27,
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFE0F2FE),
                                   borderRadius: BorderRadius.circular(6),
                                   border: Border.all(color: const Color(0xFF0284C7)),
                                 ),
-                                child: const Icon(Icons.badge_rounded, size: 13, color: Color(0xFF0284C7)),
+                                child: const Center(child: Icon(Icons.badge_rounded, size: 12, color: Color(0xFF0284C7))),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 3),
                         ],
 
                         // Invoice Receipt Button
                         IconButton(
-                          icon: const Icon(Icons.receipt_rounded, color: AppTheme.slate700, size: 16),
-                          tooltip: 'Print Invoice Receipt',
+                          icon: const Icon(Icons.receipt_rounded, color: AppTheme.slate700, size: 15),
+                          tooltip: 'Print Invoice',
                           visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.all(2),
-                          constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 25, minHeight: 25),
                           onPressed: () => InvoiceDialog.show(context, b),
                         ),
-                        const SizedBox(width: 2),
 
                         // Full Dossier Button
                         IconButton(
-                          icon: const Icon(Icons.info_outline_rounded, color: AppTheme.primaryBlue, size: 16),
-                          tooltip: 'View Full Dossier',
+                          icon: const Icon(Icons.info_outline_rounded, color: AppTheme.primaryBlue, size: 15),
+                          tooltip: 'Full Dossier',
                           visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.all(2),
-                          constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 25, minHeight: 25),
                           onPressed: () => _showBookingDetailsDialog(context, b),
                         ),
-                        const SizedBox(width: 2),
 
                         // Delete Button
                         IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.rose500, size: 16),
+                          icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.rose500, size: 15),
                           tooltip: 'Delete Booking',
                           visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.all(2),
-                          constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 25, minHeight: 25),
                           onPressed: () => _showDeleteConfirmDialog(context, b),
                         ),
                       ],
