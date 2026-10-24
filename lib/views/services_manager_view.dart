@@ -844,38 +844,56 @@ class _ServicesManagerViewState extends State<ServicesManagerView> {
                   ],
                 ),
               ),
-              InkWell(
-                onTap: () => _openQuickPriceDialog(context, service, tier, provider),
-                borderRadius: BorderRadius.circular(4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: Text(
-                        'Client: ${currencyFormat.format(tier.priceLKR)}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.slate900,
+              Tooltip(
+                message: 'Click to adjust Client Price & Staff Payout Split',
+                child: InkWell(
+                  onTap: () => _openQuickPriceDialog(context, service, tier, provider),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Client: ${currencyFormat.format(tier.priceLKR)}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.slate900,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.tune_rounded, size: 12, color: AppTheme.primaryBlue),
+                          ],
                         ),
-                      ),
+                        const SizedBox(height: 2),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFECFDF5),
+                            borderRadius: BorderRadius.circular(3),
+                            border: Border.all(color: const Color(0xFFA7F3D0)),
+                          ),
+                          child: Text(
+                            'Staff: LKR ${tier.staffPayoutRateLKR.toInt()} (${tier.priceLKR > 0 ? ((tier.staffPayoutRateLKR / tier.priceLKR) * 100).round() : 80}%)',
+                            style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF047857),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Staff: LKR ${tier.staffPayoutRateLKR.toInt()}',
-                      style: const TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF059669),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -909,6 +927,24 @@ class _ServicesManagerViewState extends State<ServicesManagerView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              InkWell(
+                onTap: () => _openQuickPriceDialog(context, service, tier, provider),
+                borderRadius: BorderRadius.circular(4),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calculate_outlined, size: 12, color: Color(0xFF059669)),
+                      const SizedBox(width: 3),
+                      const Text(
+                        'Payout Split',
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF059669)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: () => _openTierDialog(context, service: service, existingTier: tier),
                 borderRadius: BorderRadius.circular(4),
@@ -1000,54 +1036,363 @@ class _ServicesManagerViewState extends State<ServicesManagerView> {
     );
   }
 
-  // ======================= QUICK PRICE EDIT =======================
+  // ======================= PRICING & STAFF PAYOUT SPLIT CALCULATOR =======================
   void _openQuickPriceDialog(BuildContext context, ServiceModel service, TierPricing tier, AdminProvider provider) {
-    final priceCtrl = TextEditingController(text: tier.priceLKR.toInt().toString());
+    final clientPriceCtrl = TextEditingController(text: tier.priceLKR.toInt().toString());
+    final staffPayoutCtrl = TextEditingController(text: tier.staffPayoutRateLKR.toInt().toString());
+
+    double initialPct = tier.priceLKR > 0 ? ((tier.staffPayoutRateLKR / tier.priceLKR) * 100) : 80.0;
+    double? selectedPreset = [70.0, 75.0, 80.0, 85.0, 90.0].contains(initialPct.roundToDouble())
+        ? initialPct.roundToDouble()
+        : null;
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Update Price - ${tier.tierName}'),
-        content: SizedBox(
-          width: 320,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Service: ${service.nameEn}', style: const TextStyle(fontSize: 11.5, color: Colors.grey)),
-              const SizedBox(height: 12),
-              TextField(
-                controller: priceCtrl,
-                keyboardType: TextInputType.number,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Rate in LKR',
-                  prefixText: 'LKR ',
-                  border: OutlineInputBorder(),
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setModalState) {
+          final clientPrice = double.tryParse(clientPriceCtrl.text.trim()) ?? 0.0;
+          final staffPayout = double.tryParse(staffPayoutCtrl.text.trim()) ?? 0.0;
+          final agencyMargin = (clientPrice - staffPayout).clamp(0.0, double.infinity);
+          final staffPct = clientPrice > 0 ? (staffPayout / clientPrice * 100) : 0.0;
+          final marginPct = clientPrice > 0 ? (agencyMargin / clientPrice * 100) : 0.0;
+
+          void updatePreset(double pct) {
+            setModalState(() {
+              selectedPreset = pct;
+              final newPayout = (clientPrice * (pct / 100.0)).roundToDouble();
+              staffPayoutCtrl.text = newPayout.toInt().toString();
+            });
+          }
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            titlePadding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+            contentPadding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+            actionsPadding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.calculate_rounded, color: Color(0xFF059669), size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Pricing & Staff Payout Split',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.slate900),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${tier.tierName} • ${service.nameEn}',
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
+            ),
+            content: SizedBox(
+              width: 440,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Client Charge section
+                    const Text(
+                      '1. CUSTOMER RATE (Client Charged)',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.slate700, letterSpacing: 0.3),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: clientPriceCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Client Price per Shift (LKR)',
+                        prefixText: 'LKR ',
+                        hintText: 'e.g. 4500',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      onChanged: (val) {
+                        setModalState(() {
+                          if (selectedPreset != null) {
+                            final cPrice = double.tryParse(val.trim()) ?? 0.0;
+                            final newPayout = (cPrice * (selectedPreset! / 100.0)).roundToDouble();
+                            staffPayoutCtrl.text = newPayout.toInt().toString();
+                          }
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Staff Payout Share Selector
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          '2. STAFF MEMBER PAYOUT SHARE',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.slate700, letterSpacing: 0.3),
+                        ),
+                        if (selectedPreset != null)
+                          Text(
+                            'Preset: ${selectedPreset!.toInt()}%',
+                            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF059669)),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Quick percentage chips
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [70.0, 75.0, 80.0, 85.0, 90.0].map((pct) {
+                        final isSel = selectedPreset == pct;
+                        return ChoiceChip(
+                          label: Text(
+                            '${pct.toInt()}% Staff',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: isSel ? FontWeight.bold : FontWeight.w500,
+                              color: isSel ? Colors.white : AppTheme.slate800,
+                            ),
+                          ),
+                          selected: isSel,
+                          selectedColor: const Color(0xFF059669),
+                          backgroundColor: Colors.grey.shade100,
+                          onSelected: (selected) {
+                            if (selected) {
+                              updatePreset(pct);
+                            }
+                          },
+                        );
+                      }).toList(),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Staff Payout Direct Amount Input
+                    TextField(
+                      controller: staffPayoutCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Staff Payout Rate per Shift (LKR)',
+                        prefixText: 'LKR ',
+                        hintText: 'e.g. 3600',
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                        helperText: 'Paid to assigned caregiver for each completed duty shift',
+                        helperStyle: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                      ),
+                      onChanged: (val) {
+                        setModalState(() {
+                          selectedPreset = null; // custom amount entered
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Visual Split Breakdown Card
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Payout & Margin Breakdown',
+                                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: AppTheme.slate900),
+                              ),
+                              Text(
+                                'Total: LKR ${clientPrice.toInt()}',
+                                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Visual split progress bar
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: SizedBox(
+                              height: 10,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    flex: (staffPct * 10).clamp(1, 1000).toInt(),
+                                    child: Container(color: const Color(0xFF059669)),
+                                  ),
+                                  Expanded(
+                                    flex: (marginPct * 10).clamp(1, 1000).toInt(),
+                                    child: Container(color: AppTheme.primaryBlue),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Two columns: Staff & Agency
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFECFDF5),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: const Color(0xFFA7F3D0)),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Caregiver Payout',
+                                        style: TextStyle(fontSize: 10, color: Colors.green.shade800, fontWeight: FontWeight.w600),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'LKR ${staffPayout.toInt()}',
+                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF047857)),
+                                      ),
+                                      Text(
+                                        '${staffPct.toStringAsFixed(1)}% of client fee',
+                                        style: TextStyle(fontSize: 9.5, color: Colors.green.shade700),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFEFF6FF),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: const Color(0xFFBFDBFE)),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Agency Gross Margin',
+                                        style: TextStyle(fontSize: 10, color: Colors.blue.shade800, fontWeight: FontWeight.w600),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'LKR ${agencyMargin.toInt()}',
+                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1D4ED8)),
+                                      ),
+                                      Text(
+                                        '${marginPct.toStringAsFixed(1)}% retention',
+                                        style: TextStyle(fontSize: 9.5, color: Colors.blue.shade700),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Privacy notice
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.amber.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.lock_outline_rounded, size: 16, color: Colors.amber.shade900),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Confidential: Staff payout is strictly visible to Admin and the Caregiver mobile app. It is NEVER shown on the customer web portal.',
+                              style: TextStyle(fontSize: 10, color: Colors.amber.shade900, height: 1.3),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.check_rounded, size: 16),
+                label: const Text('Save Pricing & Payout'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryBlue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
+                onPressed: () async {
+                  final newClientPrice = double.tryParse(clientPriceCtrl.text.trim());
+                  final newStaffPayout = double.tryParse(staffPayoutCtrl.text.trim());
+                  if (newClientPrice == null || newClientPrice <= 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter a valid Client Price'), backgroundColor: Colors.red),
+                    );
+                    return;
+                  }
+                  final effectivePayout = newStaffPayout != null && newStaffPayout > 0
+                      ? newStaffPayout
+                      : (newClientPrice * 0.80);
+
+                  final messenger = ScaffoldMessenger.of(context);
+                  Navigator.pop(ctx);
+                  await provider.updateServicePrice(
+                    service.id,
+                    tier.tierId,
+                    newClientPrice,
+                    newStaffPayout: effectivePayout,
+                  );
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Saved! Client: LKR ${currencyFormat.format(newClientPrice)} • Staff: LKR ${effectivePayout.toInt()} (${((effectivePayout / newClientPrice) * 100).round()}%) for ${tier.tierName}',
+                      ),
+                      backgroundColor: AppTheme.emeraldGreen,
+                    ),
+                  );
+                },
+              ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              final newPrice = double.tryParse(priceCtrl.text.trim());
-              if (newPrice != null && newPrice > 0) {
-                provider.updateServicePrice(service.id, tier.tierId, newPrice);
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Price updated to LKR ${currencyFormat.format(newPrice)} for ${tier.tierName}!'),
-                    backgroundColor: AppTheme.emeraldGreen,
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue, foregroundColor: Colors.white),
-            child: const Text('Save Price'),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -1427,62 +1772,117 @@ class _ServicesManagerViewState extends State<ServicesManagerView> {
   void _openQuickAddTierInsideDialog(BuildContext context, {required Function(TierPricing) onAdded}) {
     final tNameCtrl = TextEditingController();
     final tPriceCtrl = TextEditingController(text: '4500');
+    final tStaffPayoutCtrl = TextEditingController(text: '3600');
     final tDutiesCtrl = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (qCtx) => AlertDialog(
-        title: const Text('Add Tier to Package'),
-        content: SizedBox(
-          width: 380,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: tNameCtrl,
-                decoration: const InputDecoration(labelText: 'Tier Name (e.g. NVQ 4 Certified Caregiver)', border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: tPriceCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Price per Shift (LKR)', prefixText: 'LKR ', border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: tDutiesCtrl,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Responsibilities (one per line)',
-                  hintText: 'Assisted sponge bathing\nRoutine meal prep\nFeeding & medication reminding',
-                  border: OutlineInputBorder(),
+      builder: (qCtx) => StatefulBuilder(
+        builder: (context, setQuickState) {
+          final cPrice = double.tryParse(tPriceCtrl.text.trim()) ?? 0.0;
+          final sPayout = double.tryParse(tStaffPayoutCtrl.text.trim()) ?? 0.0;
+          final margin = (cPrice - sPayout).clamp(0.0, double.infinity);
+
+          return AlertDialog(
+            title: const Text('Add Tier to Package'),
+            content: SizedBox(
+              width: 400,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: tNameCtrl,
+                      decoration: const InputDecoration(labelText: 'Tier Name (e.g. NVQ 4 Certified Caregiver)', border: OutlineInputBorder()),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: tPriceCtrl,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(labelText: 'Client Price (LKR)', prefixText: 'LKR ', border: OutlineInputBorder()),
+                            onChanged: (val) {
+                              setQuickState(() {
+                                final p = double.tryParse(val.trim()) ?? 0.0;
+                                tStaffPayoutCtrl.text = (p * 0.80).round().toString();
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: TextField(
+                            controller: tStaffPayoutCtrl,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Staff Payout (LKR)',
+                              prefixText: 'LKR ',
+                              helperText: 'Confidential (80%)',
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (val) => setQuickState(() {}),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Staff: LKR ${sPayout.toInt()}', style: const TextStyle(fontSize: 10.5, color: Color(0xFF059669), fontWeight: FontWeight.bold)),
+                          Text('Agency Margin: LKR ${margin.toInt()}', style: const TextStyle(fontSize: 10.5, color: AppTheme.primaryBlue, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: tDutiesCtrl,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: 'Responsibilities (one per line)',
+                        hintText: 'Assisted sponge bathing\nRoutine meal prep\nFeeding & medication reminding',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(qCtx), child: const Text('Cancel')),
+              ElevatedButton(
+                onPressed: () {
+                  if (tNameCtrl.text.trim().isEmpty) return;
+                  final dutiesList = tDutiesCtrl.text
+                      .split('\n')
+                      .map((e) => e.trim())
+                      .where((e) => e.isNotEmpty)
+                      .toList();
+                  final clientPrice = double.tryParse(tPriceCtrl.text.trim()) ?? 4500.0;
+                  final staffPayout = double.tryParse(tStaffPayoutCtrl.text.trim()) ?? (clientPrice * 0.80);
+                  final newTier = TierPricing(
+                    tierId: 'tier_${DateTime.now().millisecondsSinceEpoch}',
+                    tierName: tNameCtrl.text.trim(),
+                    priceLKR: clientPrice,
+                    staffPayoutRateLKR: staffPayout,
+                    duties: dutiesList.isNotEmpty ? dutiesList : ['Dedicated patient care and routine assistance'],
+                  );
+                  onAdded(newTier);
+                  Navigator.pop(qCtx);
+                },
+                child: const Text('Add'),
+              ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(qCtx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              if (tNameCtrl.text.trim().isEmpty) return;
-              final dutiesList = tDutiesCtrl.text
-                  .split('\n')
-                  .map((e) => e.trim())
-                  .where((e) => e.isNotEmpty)
-                  .toList();
-              final newTier = TierPricing(
-                tierId: 'tier_${DateTime.now().millisecondsSinceEpoch}',
-                tierName: tNameCtrl.text.trim(),
-                priceLKR: double.tryParse(tPriceCtrl.text.trim()) ?? 4500.0,
-                duties: dutiesList.isNotEmpty ? dutiesList : ['Dedicated patient care and routine assistance'],
-              );
-              onAdded(newTier);
-              Navigator.pop(qCtx);
-            },
-            child: const Text('Add'),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -1571,6 +1971,7 @@ class _ServicesManagerViewState extends State<ServicesManagerView> {
                               prefixText: 'LKR ',
                               border: OutlineInputBorder(),
                             ),
+                            onChanged: (val) => setTierState(() {}),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -1584,6 +1985,7 @@ class _ServicesManagerViewState extends State<ServicesManagerView> {
                               helperText: 'Shown on Staff App',
                               border: OutlineInputBorder(),
                             ),
+                            onChanged: (val) => setTierState(() {}),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -1606,6 +2008,89 @@ class _ServicesManagerViewState extends State<ServicesManagerView> {
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Staff Payout Preset Shortcuts & Margin calculation
+                    Builder(
+                      builder: (bCtx) {
+                        final cPrice = double.tryParse(priceCtrl.text.trim()) ?? 0.0;
+                        final sRate = double.tryParse(staffPayoutCtrl.text.trim()) ?? 0.0;
+                        final margin = (cPrice - sRate).clamp(0.0, double.infinity);
+                        final sPct = cPrice > 0 ? (sRate / cPrice * 100) : 80.0;
+                        final mPct = cPrice > 0 ? (margin / cPrice * 100) : 20.0;
+
+                        return Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Text(
+                                    'Staff Payout Split Preset:',
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.slate800),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    'Agency Margin: LKR ${margin.toInt()} (${mPct.toStringAsFixed(0)}%)',
+                                    style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                children: [70, 75, 80, 85, 90].map((pct) {
+                                  final isMatch = (sPct.round() == pct);
+                                  return InkWell(
+                                    onTap: () {
+                                      setTierState(() {
+                                        final newPayout = (cPrice * (pct / 100.0)).roundToDouble();
+                                        staffPayoutCtrl.text = newPayout.toInt().toString();
+                                      });
+                                    },
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: isMatch ? const Color(0xFF059669) : Colors.white,
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: isMatch ? const Color(0xFF059669) : Colors.grey.shade300),
+                                      ),
+                                      child: Text(
+                                        '$pct% Staff',
+                                        style: TextStyle(
+                                          fontSize: 10.5,
+                                          fontWeight: isMatch ? FontWeight.bold : FontWeight.normal,
+                                          color: isMatch ? Colors.white : AppTheme.slate800,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Icon(Icons.lock_outline_rounded, size: 12, color: Colors.amber.shade900),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Confidential: Staff payout rate is hidden from the public website.',
+                                    style: TextStyle(fontSize: 10, color: Colors.amber.shade900),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 12),
 

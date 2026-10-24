@@ -1769,13 +1769,17 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> updateServicePrice(String serviceId, String tierId, double newPrice) async {
+  Future<void> updateServicePrice(String serviceId, String tierId, double newPrice, {double? newStaffPayout}) async {
     final svcIdx = _services.indexWhere((s) => s.id == serviceId);
     if (svcIdx != -1) {
       final tierIdx = _services[svcIdx].tiers.indexWhere((t) => t.tierId == tierId);
       if (tierIdx != -1) {
         final updatedTiers = List<TierPricing>.from(_services[svcIdx].tiers);
-        updatedTiers[tierIdx] = updatedTiers[tierIdx].copyWith(priceLKR: newPrice);
+        final staffPayout = newStaffPayout ?? updatedTiers[tierIdx].staffPayoutRateLKR;
+        updatedTiers[tierIdx] = updatedTiers[tierIdx].copyWith(
+          priceLKR: newPrice,
+          staffPayoutRateLKR: staffPayout,
+        );
         final updatedService = _services[svcIdx].copyWith(tiers: updatedTiers);
         await updateService(updatedService);
       }
