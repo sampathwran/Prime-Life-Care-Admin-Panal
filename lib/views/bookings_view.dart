@@ -2108,9 +2108,13 @@ class _BookingsViewState extends State<BookingsView> {
         children: [
           Icon(icon, size: 11, color: text),
           const SizedBox(width: 3.5),
-          Text(
-            label,
-            style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: text),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: text),
+            ),
           ),
         ],
       ),
@@ -2481,11 +2485,11 @@ class _BookingsViewState extends State<BookingsView> {
                   builder: (context, constraints) {
                     final width = constraints.maxWidth;
                     int crossAxisCount = 3;
-                    if (width >= 1550) {
+                    if (width >= 1600) {
                       crossAxisCount = 4;
-                    } else if (width >= 1150) {
+                    } else if (width >= 1200) {
                       crossAxisCount = 3;
-                    } else if (width >= 720) {
+                    } else if (width >= 750) {
                       crossAxisCount = 2;
                     } else {
                       crossAxisCount = 1;
@@ -2498,7 +2502,7 @@ class _BookingsViewState extends State<BookingsView> {
                         crossAxisCount: crossAxisCount,
                         crossAxisSpacing: 14,
                         mainAxisSpacing: 14,
-                        mainAxisExtent: 335,
+                        mainAxisExtent: 355,
                       ),
                       itemCount: filteredList.length,
                       itemBuilder: (context, idx) {
@@ -3454,74 +3458,92 @@ class _BookingsViewState extends State<BookingsView> {
                         // Primary Workflow Action
                         if (b.isNewWeb) ...[
                           Expanded(
-                            child: SizedBox(
-                              height: 28,
-                              child: ElevatedButton.icon(
-                                onPressed: () => provider.markBookingInProcess(b.id),
-                                icon: const Icon(Icons.check_circle_outline_rounded, size: 11),
-                                label: const Text('Accept Ops', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold)),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFFEF3C7),
-                                  foregroundColor: const Color(0xFF92400E),
-                                  elevation: 0,
-                                  side: const BorderSide(color: Color(0xFFF59E0B)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            child: InkWell(
+                              onTap: () => provider.markBookingInProcess(b.id),
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFEF3C7),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: const Color(0xFFF59E0B)),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.check_circle_outline_rounded, size: 12, color: Color(0xFFB45309)),
+                                    SizedBox(width: 3.5),
+                                    Text('Accept Ops', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Color(0xFF92400E))),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
                         ] else if (b.isInProcess) ...[
                           Expanded(
-                            child: SizedBox(
-                              height: 28,
-                              child: ElevatedButton.icon(
-                                onPressed: () => provider.broadcastBookingToStaff(b.id),
-                                icon: const Icon(Icons.cell_tower_rounded, size: 11),
-                                label: const Text('Release', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold)),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFFAF5FF),
-                                  foregroundColor: const Color(0xFF6B21A8),
-                                  elevation: 0,
-                                  side: const BorderSide(color: Color(0xFFA855F7)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            child: InkWell(
+                              onTap: () => provider.broadcastBookingToStaff(b.id),
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFAF5FF),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: const Color(0xFFA855F7)),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.cell_tower_rounded, size: 12, color: Color(0xFF7E22CE)),
+                                    SizedBox(width: 3.5),
+                                    Text('Release to Staff', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Color(0xFF6B21A8))),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
                         ] else if (b.isBroadcasted) ...[
                           Expanded(
-                            child: SizedBox(
-                              height: 28,
-                              child: ElevatedButton.icon(
-                                onPressed: () => BookingQueueDispatchDialog.show(context, b),
-                                icon: const Icon(Icons.flash_on_rounded, size: 11),
-                                label: Text('Queue (${b.candidateQueue.length}/${b.maxCandidates})', style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold)),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFFAF5FF),
-                                  foregroundColor: const Color(0xFF6B21A8),
-                                  elevation: 0,
-                                  side: const BorderSide(color: Color(0xFFA855F7)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            child: InkWell(
+                              onTap: () => BookingQueueDispatchDialog.show(context, b),
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFAF5FF),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: const Color(0xFFA855F7)),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.flash_on_rounded, size: 12, color: Color(0xFF7E22CE)),
+                                    const SizedBox(width: 3.5),
+                                    Text('Queue (${b.candidateQueue.length}/${b.maxCandidates})', style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Color(0xFF6B21A8))),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
                         ] else ...[
                           Expanded(
-                            child: SizedBox(
-                              height: 28,
-                              child: OutlinedButton.icon(
-                                onPressed: () => BookingQueueDispatchDialog.show(context, b),
-                                icon: const Icon(Icons.visibility_rounded, size: 11),
-                                label: const Text('Queue / Care', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold)),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppTheme.primaryBlue,
-                                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                                  side: const BorderSide(color: AppTheme.primaryBlue),
+                            child: InkWell(
+                              onTap: () => BookingQueueDispatchDialog.show(context, b),
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: AppTheme.primaryBlue),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.visibility_rounded, size: 12, color: AppTheme.primaryBlue),
+                                    SizedBox(width: 3.5),
+                                    Text('Queue / Care', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: AppTheme.primaryBlue)),
+                                  ],
                                 ),
                               ),
                             ),
@@ -3540,14 +3562,13 @@ class _BookingsViewState extends State<BookingsView> {
                             ),
                             borderRadius: BorderRadius.circular(6),
                             child: Container(
-                              width: 28,
-                              height: 28,
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5.5),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFDCFCE7),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(color: const Color(0xFF22C55E)),
                               ),
-                              child: const Center(child: Icon(Icons.chat_bubble_rounded, size: 12, color: Color(0xFF16A34A))),
+                              child: const Icon(Icons.chat_bubble_rounded, size: 13, color: Color(0xFF16A34A)),
                             ),
                           ),
                         ),
@@ -3565,14 +3586,13 @@ class _BookingsViewState extends State<BookingsView> {
                               ),
                               borderRadius: BorderRadius.circular(6),
                               child: Container(
-                                width: 28,
-                                height: 28,
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5.5),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFE0F2FE),
                                   borderRadius: BorderRadius.circular(6),
                                   border: Border.all(color: const Color(0xFF0284C7)),
                                 ),
-                                child: const Center(child: Icon(Icons.badge_rounded, size: 12, color: Color(0xFF0284C7))),
+                                child: const Icon(Icons.badge_rounded, size: 13, color: Color(0xFF0284C7)),
                               ),
                             ),
                           ),
