@@ -21,6 +21,7 @@ class _BookingsViewState extends State<BookingsView> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _horizontalScrollController = ScrollController();
   String _localSearchQuery = '';
+  bool _isGridView = true;
 
   @override
   void initState() {
@@ -2320,6 +2321,60 @@ class _BookingsViewState extends State<BookingsView> {
                         ),
                       ),
                       const SizedBox(width: 8),
+
+                      // View Mode Toggle (Grid vs Table)
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.slate100,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppTheme.slate200),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Tooltip(
+                              message: 'Grid View (Cards)',
+                              child: InkWell(
+                                onTap: () => setState(() => _isGridView = true),
+                                borderRadius: const BorderRadius.horizontal(left: Radius.circular(7)),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: _isGridView ? AppTheme.primaryBlue : Colors.transparent,
+                                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(7)),
+                                  ),
+                                  child: Icon(
+                                    Icons.grid_view_rounded,
+                                    size: 16,
+                                    color: _isGridView ? Colors.white : AppTheme.slate600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Tooltip(
+                              message: 'Table View (Spreadsheet)',
+                              child: InkWell(
+                                onTap: () => setState(() => _isGridView = false),
+                                borderRadius: const BorderRadius.horizontal(right: Radius.circular(7)),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: !_isGridView ? AppTheme.primaryBlue : Colors.transparent,
+                                    borderRadius: const BorderRadius.horizontal(right: Radius.circular(7)),
+                                  ),
+                                  child: Icon(
+                                    Icons.table_rows_rounded,
+                                    size: 16,
+                                    color: !_isGridView ? Colors.white : AppTheme.slate600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+
                       // Deleted Bookings History Button
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
@@ -2417,42 +2472,55 @@ class _BookingsViewState extends State<BookingsView> {
 
             const SizedBox(height: 10),
 
-            // Main Bookings Table Card with Horizontal Scrollbar Slider
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.slate200),
-              ),
-              padding: const EdgeInsets.all(8),
-              child: filteredList.isEmpty
-                  ? Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
-                      alignment: Alignment.center,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.inbox_rounded, size: 40, color: AppTheme.slate400),
-                          const SizedBox(height: 10),
-                          SelectableText(
-                            totalBookingsCount == 0
-                                ? 'No Bookings in System Yet'
-                                : 'No Bookings Found',
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.slate700),
-                          ),
-                          const SizedBox(height: 4),
-                          SelectableText(
-                            totalBookingsCount == 0
-                                ? 'When patients or families submit bookings through the website, they will appear here in real time.'
-                                : 'No bookings match your selected filter or search term.',
-                            style: const TextStyle(fontSize: 11, color: AppTheme.slate500),
-                          ),
-                        ],
+            // Main Bookings View: Responsive Grid View (Default) or Data Table View
+            if (_isGridView) ...[
+              if (filteredList.isEmpty)
+                _buildEmptyBookingsState(totalBookingsCount)
+              else
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final width = constraints.maxWidth;
+                    int crossAxisCount = 3;
+                    if (width >= 1550) {
+                      crossAxisCount = 4;
+                    } else if (width >= 1100) {
+                      crossAxisCount = 3;
+                    } else if (width >= 680) {
+                      crossAxisCount = 2;
+                    } else {
+                      crossAxisCount = 1;
+                    }
+
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: 14,
+                        mainAxisSpacing: 14,
+                        mainAxisExtent: 425,
                       ),
-                    )
-                  : Scrollbar(
-                      controller: _horizontalScrollController,
+                      itemCount: filteredList.length,
+                      itemBuilder: (context, idx) {
+                        final b = filteredList[idx];
+                        return _buildBookingGridCard(context, b, currency, provider);
+                      },
+                    );
+                  },
+                ),
+            ] else ...[
+              // Traditional Spreadsheet / Table View
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.slate200),
+                ),
+                padding: const EdgeInsets.all(8),
+                child: filteredList.isEmpty
+                    ? _buildEmptyBookingsState(totalBookingsCount)
+                    : Scrollbar(
+                        controller: _horizontalScrollController,
                       thumbVisibility: true,
                       trackVisibility: true,
                       child: SingleChildScrollView(
@@ -2941,6 +3009,607 @@ class _BookingsViewState extends State<BookingsView> {
                         ),
                       ),
                     ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyBookingsState(int totalBookingsCount) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.slate200),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: AppTheme.slate100,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.assignment_outlined, size: 40, color: AppTheme.slate400),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'No Bookings Found',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.slate800),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            totalBookingsCount == 0
+                ? 'No bookings have been recorded in the system yet.'
+                : 'No bookings match your current filter, status tab, or search criteria.',
+            style: const TextStyle(fontSize: 13, color: AppTheme.slate500),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBookingGridCard(
+    BuildContext context,
+    BookingModel b,
+    NumberFormat currency,
+    AdminProvider provider,
+  ) {
+    Color statusAccentColor;
+    if (b.isNewWeb) {
+      statusAccentColor = Colors.amber.shade600;
+    } else if (b.isInProcess) {
+      statusAccentColor = const Color(0xFF2563EB);
+    } else if (b.isBroadcasted) {
+      statusAccentColor = const Color(0xFF9333EA);
+    } else if (b.isOnDuty) {
+      statusAccentColor = const Color(0xFF059669);
+    } else if (b.isCompleted) {
+      statusAccentColor = AppTheme.slate500;
+    } else {
+      statusAccentColor = AppTheme.primaryBlue;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: b.hasCaregiverChangeRequest ? AppTheme.rose200 : AppTheme.slate200,
+          width: b.hasCaregiverChangeRequest ? 1.5 : 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top status accent stripe
+            Container(
+              height: 4,
+              color: b.hasCaregiverChangeRequest ? AppTheme.rose500 : statusAccentColor,
+            ),
+
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // 1. Header Row: Booking Code, Status Badge, Workflow Menu
+                    Row(
+                      children: [
+                        InkWell(
+                          onTap: () => BookingQueueDispatchDialog.show(context, b),
+                          borderRadius: BorderRadius.circular(4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                b.bookingCode,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 13,
+                                  color: AppTheme.primaryBlue,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.open_in_new_rounded, size: 12, color: AppTheme.primaryBlue),
+                            ],
+                          ),
+                        ),
+                        if (b.isNewWeb) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF3C7),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: const Color(0xFFF59E0B)),
+                            ),
+                            child: const Text(
+                              'NEW',
+                              style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w900, color: Color(0xFFB45309)),
+                            ),
+                          ),
+                        ],
+                        const Spacer(),
+                        PopupMenuButton<String>(
+                          initialValue: b.status,
+                          tooltip: 'Change Workflow Status',
+                          onSelected: (val) {
+                            if (val != b.status) {
+                              _showStatusChangeConfirmDialog(context, b, val);
+                            }
+                          },
+                          child: _buildStatusBadge(b.status, booking: b),
+                          itemBuilder: (ctx) => const [
+                            PopupMenuItem(value: 'pending_review', child: Text('Pending Review / New Web', style: TextStyle(fontSize: 11))),
+                            PopupMenuItem(value: 'in_process', child: Text('In Process (Ops Hold)', style: TextStyle(fontSize: 11))),
+                            PopupMenuItem(value: 'broadcasted', child: Text('Released to Staff Apps', style: TextStyle(fontSize: 11))),
+                            PopupMenuItem(value: 'caregiver_assigned', child: Text('Caregiver Assigned', style: TextStyle(fontSize: 11))),
+                            PopupMenuItem(value: 'in_progress', child: Text('On Duty', style: TextStyle(fontSize: 11))),
+                            PopupMenuItem(value: 'completed', child: Text('Completed', style: TextStyle(fontSize: 11))),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    // 2. Patient Details & Mobility Row
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: AppTheme.slate100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.person_rounded, size: 20, color: AppTheme.slate600),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      b.patientName,
+                                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppTheme.slate900),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                    decoration: BoxDecoration(
+                                      color: b.mobility == 'bedridden' ? AppTheme.rose100 : AppTheme.slate100,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      b.mobility.toUpperCase().replaceAll('_', ' '),
+                                      style: TextStyle(
+                                        fontSize: 8.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: b.mobility == 'bedridden' ? AppTheme.rose800 : AppTheme.slate700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${b.patientAge} Yrs • ${b.patientGender} • Ph: ${b.contactPhone}',
+                                style: const TextStyle(fontSize: 10, color: AppTheme.slate500),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  const Icon(Icons.location_on_outlined, size: 11, color: AppTheme.slate400),
+                                  const SizedBox(width: 2),
+                                  Expanded(
+                                    child: Text(
+                                      '${b.city}, ${b.district}',
+                                      style: const TextStyle(fontSize: 10, color: AppTheme.slate600, fontWeight: FontWeight.w500),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (b.hasLocation) ...[
+                                    const SizedBox(width: 4),
+                                    InkWell(
+                                      onTap: () => launchUrl(Uri.parse(b.effectiveMapsUrl)),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFEFF6FF),
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: const Color(0xFF3B82F6).withOpacity(0.3)),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: const [
+                                            Icon(Icons.map_rounded, size: 9.5, color: Color(0xFF2563EB)),
+                                            SizedBox(width: 2),
+                                            Text(
+                                              'Maps ↗',
+                                              style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w700, color: Color(0xFF1D4ED8)),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // 3. Service & Shift Details Card
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppTheme.slate200.withOpacity(0.7)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  b.serviceName,
+                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, color: AppTheme.slate800),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${b.staffTierName} • ${b.shiftHours}h/day',
+                                  style: const TextStyle(fontSize: 9.5, color: AppTheme.primaryBlue, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '${b.durationDays} Days',
+                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: AppTheme.slate800),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                b.isCompleted
+                                    ? 'Finished'
+                                    : '${b.remainingDays}d remaining',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: b.isCompleted ? AppTheme.slate500 : const Color(0xFF0D9488),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // 4. Assigned Caregiver Card + Check-in Beacon
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: b.assignedCaregiverName != null ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: b.assignedCaregiverName != null
+                              ? const Color(0xFF86EFAC)
+                              : const Color(0xFFFECACA),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            b.assignedCaregiverName != null ? Icons.assignment_ind_rounded : Icons.person_off_outlined,
+                            size: 16,
+                            color: b.assignedCaregiverName != null ? const Color(0xFF15803D) : AppTheme.rose500,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  b.assignedCaregiverName ?? 'No Caregiver Assigned',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 11,
+                                    color: b.assignedCaregiverName != null ? const Color(0xFF14532D) : AppTheme.rose800,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 1.5),
+                                if (b.assignedCaregiverName != null)
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 6,
+                                        height: 6,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: b.isCaregiverCheckedIn ? const Color(0xFF16A34A) : Colors.amber.shade700,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        b.isCaregiverCheckedIn ? 'On Duty (Checked In)' : 'Awaiting Check-In',
+                                        style: TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w700,
+                                          color: b.isCaregiverCheckedIn ? const Color(0xFF15803D) : Colors.amber.shade900,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                else
+                                  const Text(
+                                    'Awaiting dispatch or queue',
+                                    style: TextStyle(fontSize: 9, color: AppTheme.rose500),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.edit_note_rounded, size: 17, color: AppTheme.primaryBlue),
+                            tooltip: 'Assign or Change Caregiver',
+                            visualDensity: VisualDensity.compact,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                            onPressed: () => _showAssignCaregiverDialog(context, b),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // 5. Caregiver Replacement Alert Banner (If Requested)
+                    if (b.hasCaregiverChangeRequest)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF1F2),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFFDA4AF)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.warning_amber_rounded, size: 14, color: AppTheme.rose600),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Replacement Request: ${b.caregiverChangeReason.isNotEmpty ? b.caregiverChangeReason : b.caregiverChangeCategory}',
+                                style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFF9F1239)),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // 6. Financials Row & Payment Badge
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Client: LKR ${currency.format(b.totalCostLKR)}',
+                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11.5, color: AppTheme.slate900),
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              'Staff: LKR ${currency.format(b.staffTotalPayoutLKR)}',
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 9.5, color: Color(0xFF0D9488)),
+                            ),
+                          ],
+                        ),
+                        _buildPaymentBadge(
+                          b.paymentStatus,
+                          () {
+                            final nextStatus = b.paymentStatus == 'unpaid'
+                                ? 'advance_paid'
+                                : (b.paymentStatus == 'advance_paid' ? 'fully_paid' : 'unpaid');
+                            provider.updateBookingPaymentStatus(b.id, nextStatus);
+                          },
+                        ),
+                      ],
+                    ),
+
+                    const Divider(height: 1, thickness: 1, color: AppTheme.slate200),
+
+                    // 7. Operational Actions Bar
+                    Row(
+                      children: [
+                        // Status Action Button
+                        if (b.isNewWeb) ...[
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => provider.markBookingInProcess(b.id),
+                              icon: const Icon(Icons.check_circle_outline_rounded, size: 12),
+                              label: const Text('Accept Ops', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFFEF3C7),
+                                foregroundColor: const Color(0xFF92400E),
+                                elevation: 0,
+                                side: const BorderSide(color: Color(0xFFF59E0B)),
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                              ),
+                            ),
+                          ),
+                        ] else if (b.isInProcess) ...[
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => provider.broadcastBookingToStaff(b.id),
+                              icon: const Icon(Icons.cell_tower_rounded, size: 12),
+                              label: const Text('Release to App', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFFAF5FF),
+                                foregroundColor: const Color(0xFF6B21A8),
+                                elevation: 0,
+                                side: const BorderSide(color: Color(0xFFA855F7)),
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                              ),
+                            ),
+                          ),
+                        ] else if (b.isBroadcasted) ...[
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => BookingQueueDispatchDialog.show(context, b),
+                              icon: const Icon(Icons.flash_on_rounded, size: 12),
+                              label: Text('Queue (${b.candidateQueue.length}/${b.maxCandidates})', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFFAF5FF),
+                                foregroundColor: const Color(0xFF6B21A8),
+                                elevation: 0,
+                                side: const BorderSide(color: Color(0xFFA855F7)),
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                              ),
+                            ),
+                          ),
+                        ] else ...[
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => BookingQueueDispatchDialog.show(context, b),
+                              icon: const Icon(Icons.visibility_rounded, size: 12),
+                              label: const Text('Queue / Care', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppTheme.primaryBlue,
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                side: const BorderSide(color: AppTheme.primaryBlue),
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(width: 4),
+
+                        // WhatsApp Family Button
+                        Tooltip(
+                          message: 'WhatsApp Family (${b.contactPhone})',
+                          child: InkWell(
+                            onTap: () => WhatsAppHelper.launchWhatsApp(
+                              context,
+                              b.contactPhone,
+                              'Hello ${b.contactName}, this is Prime Life Care. Your booking ${b.bookingCode} for ${b.patientName} is confirmed with caregiver ${b.assignedCaregiverName ?? "assigned staff"}. Contact: ${b.assignedCaregiverPhone ?? "+94 11 234 5678"}.',
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: const Color(0xFF22C55E)),
+                              ),
+                              child: const Icon(Icons.chat_bubble_rounded, size: 13, color: Color(0xFF16A34A)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+
+                        // WhatsApp Staff Button
+                        if (b.assignedCaregiverPhone != null) ...[
+                          Tooltip(
+                            message: 'WhatsApp Staff (${b.assignedCaregiverPhone})',
+                            child: InkWell(
+                              onTap: () => WhatsAppHelper.launchWhatsApp(
+                                context,
+                                b.assignedCaregiverPhone!,
+                                'Duty Dispatch Prime Life Care: Patient ${b.patientName} (${b.patientAge}y), Address: ${b.address}, ${b.city}. Start: ${b.startDate}. Family: ${b.contactName} (${b.contactPhone}).',
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE0F2FE),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: const Color(0xFF0284C7)),
+                                ),
+                                child: const Icon(Icons.badge_rounded, size: 13, color: Color(0xFF0284C7)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+
+                        // Invoice Receipt Button
+                        IconButton(
+                          icon: const Icon(Icons.receipt_rounded, color: AppTheme.slate700, size: 16),
+                          tooltip: 'Print Invoice Receipt',
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.all(2),
+                          constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                          onPressed: () => InvoiceDialog.show(context, b),
+                        ),
+                        const SizedBox(width: 2),
+
+                        // Full Dossier Button
+                        IconButton(
+                          icon: const Icon(Icons.info_outline_rounded, color: AppTheme.primaryBlue, size: 16),
+                          tooltip: 'View Full Dossier',
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.all(2),
+                          constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                          onPressed: () => _showBookingDetailsDialog(context, b),
+                        ),
+                        const SizedBox(width: 2),
+
+                        // Delete Button
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.rose500, size: 16),
+                          tooltip: 'Delete Booking',
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.all(2),
+                          constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                          onPressed: () => _showDeleteConfirmDialog(context, b),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
