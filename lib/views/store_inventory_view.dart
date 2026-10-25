@@ -43,91 +43,133 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Medical Store & Equipment Inventory',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.slate900,
-                    ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 980;
+              final buttons = [
+                ElevatedButton.icon(
+                  onPressed: () => _openItemDialog(context, null),
+                  icon: const Icon(Icons.add_circle_outline_rounded, size: 16),
+                  label: const Text('+ Add New Product', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    elevation: 1,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Manage hospital beds, ripple mattresses, adult diapers, wheelchairs, and monthly rentals.',
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => _openCategoryManagerDialog(context),
+                  icon: const Icon(Icons.category_rounded, size: 14),
+                  label: const Text('Manage Categories', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primaryBlue,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
-                ],
-              ),
-              Row(
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: () => _openCategoryManagerDialog(context),
-                    icon: const Icon(Icons.category_rounded, size: 14),
-                    label: const Text('Manage Categories', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.primaryBlue,
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => _confirmResetStoreProduct(context, provider),
+                  icon: const Icon(Icons.refresh_rounded, size: 14),
+                  label: const Text('Seed 1 Product', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primaryBlue,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
-                  const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text('Reset Store to 1 Authentic Product?'),
-                          content: const Text(
-                            'This will clean old dummy items and set the verified 3-Function Electric Hospital Bed with 5 multi-angle photos and 14% discount.',
-                          ),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                            ElevatedButton(
-                              onPressed: () => Navigator.pop(ctx, true),
-                              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue),
-                              child: const Text('Confirm Reset', style: TextStyle(color: Colors.white)),
+                ),
+              ];
+
+              return isNarrow
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(7),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryBlue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.medical_services_rounded, color: AppTheme.primaryBlue, size: 20),
+                            ),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Medical Store & Equipment Inventory',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.slate900,
+                                    ),
+                                  ),
+                                  SizedBox(height: 1),
+                                  Text(
+                                    'Manage hospital beds, ripple mattresses, adult diapers, wheelchairs, and monthly rentals.',
+                                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
-                      );
-                      if (confirmed == true) {
-                        await provider.seedDefaultStoreProduct();
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Store inventory updated with authentic 3-Function Hospital Bed!')),
-                          );
-                        }
-                      }
-                    },
-                    icon: const Icon(Icons.refresh_rounded, size: 14),
-                    label: const Text('Seed 1 Authentic Product', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.primaryBlue,
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton.icon(
-                    onPressed: () => _openItemDialog(context, null),
-                    icon: const Icon(Icons.add_box_outlined, size: 14),
-                    label: const Text('Add Medical Item', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryBlue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: buttons,
+                        ),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(7),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryBlue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.medical_services_rounded, color: AppTheme.primaryBlue, size: 20),
+                            ),
+                            const SizedBox(width: 8),
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Medical Store & Equipment Inventory',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.slate900,
+                                  ),
+                                ),
+                                SizedBox(height: 1),
+                                Text(
+                                  'Manage hospital beds, ripple mattresses, adult diapers, wheelchairs, and monthly rentals.',
+                                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: buttons,
+                        ),
+                      ],
+                    );
+            },
           ),
           const SizedBox(height: 10),
 
@@ -228,9 +270,9 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               SizedBox(
-                width: 220,
+                width: 170,
                 height: 32,
                 child: TextField(
                   onChanged: (val) => setState(() => _searchFilter = val),
@@ -253,6 +295,19 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed: () => _openItemDialog(context, null),
+                icon: const Icon(Icons.add_shopping_cart_rounded, size: 14),
+                label: const Text('+ Add Product', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.emeraldGreen,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 1,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -260,11 +315,35 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
           // Product Grid
           items.isEmpty
               ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 30.0),
+                  padding: const EdgeInsets.symmetric(vertical: 40.0),
                   child: Center(
-                    child: Text(
-                      'No medical supplies found.',
-                      style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.inventory_2_outlined, size: 44, color: Colors.grey.shade400),
+                        const SizedBox(height: 8),
+                        Text(
+                          'No medical products found in this category.',
+                          style: TextStyle(color: Colors.grey.shade700, fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Click "+ Add New Product" to add a hospital bed, wheelchair or supply item.',
+                          style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                        ),
+                        const SizedBox(height: 14),
+                        ElevatedButton.icon(
+                          onPressed: () => _openItemDialog(context, null),
+                          icon: const Icon(Icons.add_circle_outline_rounded, size: 16),
+                          label: const Text('+ Add New Product', style: TextStyle(fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryBlue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 )
@@ -667,6 +746,34 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmResetStoreProduct(BuildContext context, AdminProvider provider) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reset Store to 1 Authentic Product?'),
+        content: const Text(
+          'This will clean old dummy items and set the verified 3-Function Electric Hospital Bed with 5 multi-angle photos and 14% discount.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue),
+            child: const Text('Confirm Reset', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await provider.seedDefaultStoreProduct();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Store inventory updated with authentic 3-Function Hospital Bed!')),
+        );
+      }
+    }
   }
 
   void _openItemDialog(BuildContext context, MedicalItemModel? existing) {
