@@ -4,6 +4,7 @@ class OrderItemEntry {
   final int quantity;
   final double priceLKR;
   final String type; // purchase or rental
+  final String? imageUrl;
 
   OrderItemEntry({
     required this.itemId,
@@ -11,6 +12,7 @@ class OrderItemEntry {
     required this.quantity,
     required this.priceLKR,
     required this.type,
+    this.imageUrl,
   });
 
   factory OrderItemEntry.fromMap(Map<String, dynamic> map) {
@@ -20,6 +22,7 @@ class OrderItemEntry {
       quantity: (map['quantity'] as num?)?.toInt() ?? 1,
       priceLKR: (map['priceLKR'] as num?)?.toDouble() ?? 0.0,
       type: map['type']?.toString() ?? 'purchase',
+      imageUrl: (map['imageUrl'] ?? map['image'])?.toString(),
     );
   }
 
@@ -31,6 +34,7 @@ class OrderItemEntry {
       'quantity': quantity,
       'priceLKR': priceLKR,
       'type': type,
+      'imageUrl': imageUrl,
     };
   }
 }
@@ -40,6 +44,7 @@ class OrderModel {
   final String orderCode;
   final String customerName;
   final String customerPhone;
+  final String? customerEmail;
   final String deliveryAddress;
   final String district;
   final List<OrderItemEntry> items;
@@ -47,6 +52,7 @@ class OrderModel {
   final String paymentMethod; // cod, bank_transfer, online_card
   final String paymentStatus; // paid, pending_verification, cod_pending
   final String? bankSlipUrl;
+  final String? bankReference;
   final String orderStatus; // pending, dispatched, delivered, cancelled
   final bool isRental;
   final String? rentalStartDate;
@@ -59,6 +65,7 @@ class OrderModel {
     required this.orderCode,
     required this.customerName,
     required this.customerPhone,
+    this.customerEmail,
     required this.deliveryAddress,
     required this.district,
     required this.items,
@@ -66,6 +73,7 @@ class OrderModel {
     required this.paymentMethod,
     required this.paymentStatus,
     this.bankSlipUrl,
+    this.bankReference,
     required this.orderStatus,
     this.isRental = false,
     this.rentalStartDate,
@@ -79,6 +87,7 @@ class OrderModel {
     String? orderCode,
     String? customerName,
     String? customerPhone,
+    String? customerEmail,
     String? deliveryAddress,
     String? district,
     List<OrderItemEntry>? items,
@@ -86,6 +95,7 @@ class OrderModel {
     String? paymentMethod,
     String? paymentStatus,
     String? bankSlipUrl,
+    String? bankReference,
     String? orderStatus,
     bool? isRental,
     String? rentalStartDate,
@@ -98,6 +108,7 @@ class OrderModel {
       orderCode: orderCode ?? this.orderCode,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
+      customerEmail: customerEmail ?? this.customerEmail,
       deliveryAddress: deliveryAddress ?? this.deliveryAddress,
       district: district ?? this.district,
       items: items ?? this.items,
@@ -105,6 +116,7 @@ class OrderModel {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       paymentStatus: paymentStatus ?? this.paymentStatus,
       bankSlipUrl: bankSlipUrl ?? this.bankSlipUrl,
+      bankReference: bankReference ?? this.bankReference,
       orderStatus: orderStatus ?? this.orderStatus,
       isRental: isRental ?? this.isRental,
       rentalStartDate: rentalStartDate ?? this.rentalStartDate,
@@ -128,6 +140,7 @@ class OrderModel {
       orderCode: map['orderCode']?.toString() ?? docId,
       customerName: (map['customerName'] ?? map['contactName'])?.toString() ?? 'Customer',
       customerPhone: (map['customerPhone'] ?? map['contactPhone'])?.toString() ?? '',
+      customerEmail: (map['customerEmail'] ?? map['contactEmail'])?.toString(),
       deliveryAddress: map['deliveryAddress']?.toString() ?? '',
       district: map['district']?.toString() ?? 'Colombo',
       items: parsedItems,
@@ -135,6 +148,7 @@ class OrderModel {
       paymentMethod: map['paymentMethod']?.toString() ?? 'cod',
       paymentStatus: map['paymentStatus']?.toString() ?? 'pending_verification',
       bankSlipUrl: map['bankSlipUrl']?.toString(),
+      bankReference: map['bankReference']?.toString(),
       orderStatus: (map['orderStatus'] ?? map['status'])?.toString() ?? 'pending',
       isRental: map['isRental'] as bool? ?? false,
       rentalStartDate: map['rentalStartDate']?.toString(),
@@ -149,6 +163,7 @@ class OrderModel {
       'orderCode': orderCode,
       'customerName': customerName,
       'customerPhone': customerPhone,
+      'customerEmail': customerEmail,
       'deliveryAddress': deliveryAddress,
       'district': district,
       'items': items.map((i) => i.toMap()).toList(),
@@ -156,6 +171,7 @@ class OrderModel {
       'paymentMethod': paymentMethod,
       'paymentStatus': paymentStatus,
       'bankSlipUrl': bankSlipUrl,
+      'bankReference': bankReference,
       'orderStatus': orderStatus,
       'status': orderStatus,
       'isRental': isRental,

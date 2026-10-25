@@ -69,16 +69,6 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
-                OutlinedButton.icon(
-                  onPressed: () => _confirmResetStoreProduct(context, provider),
-                  icon: const Icon(Icons.refresh_rounded, size: 14),
-                  label: const Text('Seed 1 Product', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.primaryBlue,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
               ];
 
               return isNarrow
@@ -187,10 +177,19 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
               const SizedBox(width: 8),
               Expanded(
                 child: _buildMetricTile(
-                  title: 'Low Stock Alerts (≤ 5)',
+                  title: 'Low Stock (≤ 2 left)',
                   value: '${provider.lowStockItemsCount}',
                   icon: Icons.warning_amber_rounded,
                   color: Colors.amber.shade700,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildMetricTile(
+                  title: 'Out of Stock (0 left)',
+                  value: '${provider.outOfStockItemsCount}',
+                  icon: Icons.cancel_outlined,
+                  color: Colors.red.shade700,
                 ),
               ),
               const SizedBox(width: 8),
@@ -468,13 +467,18 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
   }
 
   Widget _buildProductCard(BuildContext context, MedicalItemModel item) {
-    final isLowStock = item.stock <= 5;
+    final isOutOfStock = item.stock <= 0;
+    final isLowStock = !isOutOfStock && item.stock <= 2;
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isOutOfStock
+              ? Colors.red.shade200
+              : (isLowStock ? Colors.amber.shade200 : Colors.grey.shade200),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -553,6 +557,53 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                   ],
                 ),
               ),
+              // Stock alert pill on top right
+              if (isOutOfStock)
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade700,
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.withOpacity(0.4),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'OUT OF STOCK',
+                      style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                )
+              else if (isLowStock)
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade800,
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.amber.withOpacity(0.4),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'LOW STOCK',
+                      style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                ),
               // Multi-image count pill
               if (item.imageUrls.length > 1)
                 Positioned(
@@ -674,26 +725,38 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: isLowStock ? Colors.amber.shade50 : Colors.green.shade50,
+                          color: isOutOfStock
+                              ? Colors.red.shade50
+                              : (isLowStock ? Colors.amber.shade50 : Colors.green.shade50),
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(
-                            color: isLowStock ? Colors.amber.shade300 : Colors.green.shade200,
+                            color: isOutOfStock
+                                ? Colors.red.shade300
+                                : (isLowStock ? Colors.amber.shade300 : Colors.green.shade200),
                           ),
                         ),
                         child: Row(
                           children: [
                             Icon(
-                              isLowStock ? Icons.warning_amber_rounded : Icons.check_circle_outline,
+                              isOutOfStock
+                                  ? Icons.cancel_outlined
+                                  : (isLowStock ? Icons.warning_amber_rounded : Icons.check_circle_outline),
                               size: 10,
-                              color: isLowStock ? Colors.amber.shade900 : Colors.green.shade800,
+                              color: isOutOfStock
+                                  ? Colors.red.shade800
+                                  : (isLowStock ? Colors.amber.shade900 : Colors.green.shade800),
                             ),
                             const SizedBox(width: 3),
                             Text(
-                              'Stock: ${item.stock}',
+                              isOutOfStock
+                                  ? 'OUT OF STOCK (0)'
+                                  : (isLowStock ? 'LOW STOCK (${item.stock})' : 'Stock: ${item.stock}'),
                               style: TextStyle(
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.bold,
-                                color: isLowStock ? Colors.amber.shade900 : Colors.green.shade800,
+                                color: isOutOfStock
+                                    ? Colors.red.shade800
+                                    : (isLowStock ? Colors.amber.shade900 : Colors.green.shade800),
                               ),
                             ),
                           ],
@@ -748,34 +811,6 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
     );
   }
 
-  Future<void> _confirmResetStoreProduct(BuildContext context, AdminProvider provider) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Reset Store to 1 Authentic Product?'),
-        content: const Text(
-          'This will clean old dummy items and set the verified 3-Function Electric Hospital Bed with 5 multi-angle photos and 14% discount.',
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue),
-            child: const Text('Confirm Reset', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      await provider.seedDefaultStoreProduct();
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Store inventory updated with authentic 3-Function Hospital Bed!')),
-        );
-      }
-    }
-  }
-
   void _openItemDialog(BuildContext context, MedicalItemModel? existing) {
     final isEditing = existing != null;
     final provider = context.read<AdminProvider>();
@@ -790,18 +825,21 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
 
     final nameEnCtrl = TextEditingController(text: existing?.nameEn ?? '');
     final nameSiCtrl = TextEditingController(text: existing?.nameSi ?? '');
-    final brandCtrl = TextEditingController(text: existing?.brand ?? 'Prime Medical');
+    final brandCtrl = TextEditingController(text: existing?.brand ?? '');
     final badgeCtrl = TextEditingController(text: existing?.badge ?? (existing?.discountPercentage != null && existing!.discountPercentage > 0 ? '${existing.discountPercentage}% OFF' : ''));
     final descCtrl = TextEditingController(text: existing?.description ?? '');
     final regularPriceCtrl = TextEditingController(
-      text: existing != null ? existing.regularPriceLKR.toStringAsFixed(0) : '215000',
+      text: existing != null && existing.regularPriceLKR > 0 ? existing.regularPriceLKR.toStringAsFixed(0) : '',
     );
     final salePriceCtrl = TextEditingController(
-      text: existing != null ? existing.salePriceLKR.toStringAsFixed(0) : '185000',
+      text: existing != null && existing.salePriceLKR > 0 ? existing.salePriceLKR.toStringAsFixed(0) : '',
     );
-    final stockCtrl = TextEditingController(text: existing != null ? existing.stock.toString() : '6');
-    final rentPriceCtrl = TextEditingController(text: existing?.monthlyRentLKR?.toStringAsFixed(0) ?? '15000');
-    final depositCtrl = TextEditingController(text: existing?.securityDepositLKR?.toStringAsFixed(0) ?? '25000');
+    final discountPctCtrl = TextEditingController(
+      text: existing != null && existing.discountPercentage > 0 ? existing.discountPercentage.toString() : '',
+    );
+    final stockCtrl = TextEditingController(text: existing != null ? existing.stock.toString() : '1');
+    final rentPriceCtrl = TextEditingController(text: existing?.monthlyRentLKR != null ? existing!.monthlyRentLKR!.toStringAsFixed(0) : '');
+    final depositCtrl = TextEditingController(text: existing?.securityDepositLKR != null ? existing!.securityDepositLKR!.toStringAsFixed(0) : '');
     final singleUrlCtrl = TextEditingController();
 
     List<String> imageUrls = List<String>.from(existing?.imageUrls ?? []);
@@ -813,10 +851,13 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) {
           final regVal = double.tryParse(regularPriceCtrl.text.trim()) ?? 0;
-          final saleVal = double.tryParse(salePriceCtrl.text.trim()) ?? 0;
-          final discountPct = (regVal > saleVal && regVal > 0)
-              ? (((regVal - saleVal) / regVal) * 100).round()
-              : 0;
+          final saleVal = double.tryParse(salePriceCtrl.text.trim()) ?? regVal;
+          final discInput = int.tryParse(discountPctCtrl.text.trim()) ?? 0;
+          final discountPct = discInput > 0
+              ? discInput
+              : ((regVal > saleVal && regVal > 0)
+                  ? (((regVal - saleVal) / regVal) * 100).round()
+                  : 0);
 
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -970,85 +1011,255 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                     ),
                     const SizedBox(height: 10),
 
-                    // Row 4: Pricing (Regular, Sale & Discount Badge)
+                    // Row 4: Pricing & Custom Item Discount
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.shade100),
+                        color: Colors.blue.shade50.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.blue.shade200),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
+                              const Icon(Icons.local_offer_rounded, size: 15, color: AppTheme.primaryBlue),
+                              const SizedBox(width: 6),
+                              const Text(
+                                'Pricing & Product Discount',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.slate900),
+                              ),
+                              const Spacer(),
+                              Text(
+                                'Custom discount per product',
+                                style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 1. Regular Price
                               Expanded(
+                                flex: 3,
                                 child: TextField(
                                   controller: regularPriceCtrl,
                                   keyboardType: TextInputType.number,
-                                  onChanged: (_) => setDialogState(() {}),
+                                  onChanged: (val) {
+                                    final reg = double.tryParse(val.trim()) ?? 0;
+                                    final disc = int.tryParse(discountPctCtrl.text.trim()) ?? 0;
+                                    if (disc > 0 && reg > 0) {
+                                      final newSale = reg * (1 - (disc / 100));
+                                      salePriceCtrl.text = newSale.toStringAsFixed(0);
+                                    } else {
+                                      final sale = double.tryParse(salePriceCtrl.text.trim()) ?? 0;
+                                      if (sale > 0 && reg > sale) {
+                                        final newDisc = (((reg - sale) / reg) * 100).round();
+                                        discountPctCtrl.text = newDisc.toString();
+                                      }
+                                    }
+                                    setDialogState(() {});
+                                  },
                                   decoration: const InputDecoration(
-                                    labelText: 'Regular Price (LKR)',
-                                    hintText: '215000',
+                                    labelText: 'Regular Price (LKR) *',
+                                    hintText: 'e.g. 50000',
                                     border: OutlineInputBorder(),
                                     isDense: true,
                                     prefixText: 'Rs. ',
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 8),
+
+                              // 2. Discount %
                               Expanded(
+                                flex: 2,
+                                child: TextField(
+                                  controller: discountPctCtrl,
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (val) {
+                                    final disc = int.tryParse(val.trim()) ?? 0;
+                                    final reg = double.tryParse(regularPriceCtrl.text.trim()) ?? 0;
+                                    if (reg > 0) {
+                                      if (disc > 0 && disc < 100) {
+                                        final newSale = reg * (1 - (disc / 100));
+                                        salePriceCtrl.text = newSale.toStringAsFixed(0);
+                                        if (badgeCtrl.text.trim().isEmpty || badgeCtrl.text.contains('% OFF')) {
+                                          badgeCtrl.text = '$disc% OFF';
+                                        }
+                                      } else if (disc == 0) {
+                                        salePriceCtrl.text = reg.toStringAsFixed(0);
+                                        if (badgeCtrl.text.contains('% OFF')) {
+                                          badgeCtrl.clear();
+                                        }
+                                      }
+                                    }
+                                    setDialogState(() {});
+                                  },
+                                  decoration: const InputDecoration(
+                                    labelText: 'Discount %',
+                                    hintText: 'e.g. 15',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                    suffixText: '%',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+
+                              // 3. Final Sale Price
+                              Expanded(
+                                flex: 3,
                                 child: TextField(
                                   controller: salePriceCtrl,
                                   keyboardType: TextInputType.number,
-                                  onChanged: (_) => setDialogState(() {}),
+                                  onChanged: (val) {
+                                    final sale = double.tryParse(val.trim()) ?? 0;
+                                    final reg = double.tryParse(regularPriceCtrl.text.trim()) ?? 0;
+                                    if (reg > 0 && sale > 0 && sale < reg) {
+                                      final disc = (((reg - sale) / reg) * 100).round();
+                                      discountPctCtrl.text = disc.toString();
+                                      if (badgeCtrl.text.trim().isEmpty || badgeCtrl.text.contains('% OFF')) {
+                                        badgeCtrl.text = '$disc% OFF';
+                                      }
+                                    } else if (sale >= reg) {
+                                      discountPctCtrl.clear();
+                                      if (badgeCtrl.text.contains('% OFF')) badgeCtrl.clear();
+                                    }
+                                    setDialogState(() {});
+                                  },
                                   decoration: const InputDecoration(
                                     labelText: 'Sale Price (LKR) *',
-                                    hintText: '185000',
+                                    hintText: 'e.g. 42500',
                                     border: OutlineInputBorder(),
                                     isDense: true,
                                     prefixText: 'Rs. ',
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: TextField(
-                                  controller: badgeCtrl,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Promo Badge Tag',
-                                    hintText: '14% OFF',
-                                    border: OutlineInputBorder(),
-                                    isDense: true,
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                          if (discountPct > 0) ...[
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.shade600,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    '-$discountPct% OFF',
-                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          const SizedBox(height: 8),
+
+                          // Quick Preset Discount Chips
+                          Row(
+                            children: [
+                              Text('Quick Presets: ', style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: [0, 5, 10, 15, 20, 25, 30].map((pct) {
+                                      final currentDisc = int.tryParse(discountPctCtrl.text.trim()) ?? 0;
+                                      final isSelected = currentDisc == pct;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(right: 5),
+                                        child: InkWell(
+                                          onTap: () {
+                                            final reg = double.tryParse(regularPriceCtrl.text.trim()) ?? 0;
+                                            setDialogState(() {
+                                              if (pct == 0) {
+                                                discountPctCtrl.clear();
+                                                if (reg > 0) salePriceCtrl.text = reg.toStringAsFixed(0);
+                                                if (badgeCtrl.text.contains('% OFF')) badgeCtrl.clear();
+                                              } else {
+                                                discountPctCtrl.text = pct.toString();
+                                                if (reg > 0) {
+                                                  final newSale = reg * (1 - (pct / 100));
+                                                  salePriceCtrl.text = newSale.toStringAsFixed(0);
+                                                }
+                                                badgeCtrl.text = '$pct% OFF';
+                                              }
+                                            });
+                                          },
+                                          borderRadius: BorderRadius.circular(4),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                                            decoration: BoxDecoration(
+                                              color: isSelected ? AppTheme.primaryBlue : Colors.white,
+                                              borderRadius: BorderRadius.circular(4),
+                                              border: Border.all(color: isSelected ? AppTheme.primaryBlue : Colors.grey.shade300),
+                                            ),
+                                            child: Text(
+                                              pct == 0 ? 'No Discount' : '$pct% OFF',
+                                              style: TextStyle(
+                                                fontSize: 9.5,
+                                                fontWeight: FontWeight.bold,
+                                                color: isSelected ? Colors.white : AppTheme.slate800,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Customer Saves Rs. ${(regVal - saleVal).toStringAsFixed(0)}',
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.green.shade800),
+                              ),
+                            ],
+                          ),
+
+                          // Live Preview Banner
+                          if (discountPct > 0 && regVal > 0)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade50,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: Colors.green.shade200),
                                 ),
-                              ],
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.shade600,
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                      child: Text(
+                                        '-$discountPct% OFF',
+                                        style: const TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Customer Saves Rs. ${(regVal - saleVal).toStringAsFixed(0)}',
+                                      style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.green.shade800),
+                                    ),
+                                    const Spacer(),
+                                    Text(
+                                      'Rs. ${regVal.toStringAsFixed(0)} ➔ Rs. ${saleVal.toStringAsFixed(0)}',
+                                      style: TextStyle(fontSize: 10, color: Colors.grey.shade700, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          else if (regVal > 0)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Text(
+                                'Standard Price: Rs. ${regVal.toStringAsFixed(0)} (No discount applied)',
+                                style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontStyle: FontStyle.italic),
+                              ),
                             ),
-                          ],
+
+                          const SizedBox(height: 8),
+                          // Custom Badge text
+                          TextField(
+                            controller: badgeCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Badge Tag (Optional banner text)',
+                              hintText: 'e.g. 15% OFF, Best Seller, New Arrival',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1309,10 +1520,21 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                 onPressed: () {
                   if (nameEnCtrl.text.trim().isEmpty) return;
                   final reg = double.tryParse(regularPriceCtrl.text.trim()) ?? 0;
-                  final sale = double.tryParse(salePriceCtrl.text.trim()) ?? reg;
-                  final discount = (reg > sale && reg > 0)
-                      ? (((reg - sale) / reg) * 100).round()
-                      : 0;
+                  var sale = double.tryParse(salePriceCtrl.text.trim()) ?? reg;
+                  final discInput = int.tryParse(discountPctCtrl.text.trim()) ?? 0;
+
+                  int discount = discInput;
+                  if (discInput > 0 && reg > 0) {
+                    if (sale <= 0) {
+                      sale = reg * (1 - (discInput / 100));
+                    }
+                  } else if (reg > sale && reg > 0 && sale > 0) {
+                    discount = (((reg - sale) / reg) * 100).round();
+                  }
+
+                  if (sale <= 0) {
+                    sale = reg;
+                  }
 
                   final updatedItem = MedicalItemModel(
                     id: existing?.id ?? 'med_${DateTime.now().millisecondsSinceEpoch}',
@@ -1323,7 +1545,9 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                     salePriceLKR: sale > 0 ? sale : reg,
                     discountPercentage: discount,
                     brand: brandCtrl.text.trim().isNotEmpty ? brandCtrl.text.trim() : 'Prime Medical',
-                    badge: badgeCtrl.text.trim().isNotEmpty ? badgeCtrl.text.trim() : (discount > 0 ? '$discount% OFF' : null),
+                    badge: badgeCtrl.text.trim().isNotEmpty
+                        ? badgeCtrl.text.trim()
+                        : (discount > 0 ? '$discount% OFF' : null),
                     canRent: canRent,
                     monthlyRentLKR: canRent ? double.tryParse(rentPriceCtrl.text.trim()) : null,
                     securityDepositLKR: canRent ? double.tryParse(depositCtrl.text.trim()) : null,

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -220,17 +221,56 @@ class _OrdersRentalsViewState extends State<OrdersRentalsView> {
 
                                 // Items
                                 DataCell(
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: order.items.map((it) {
-                                      return Text(
-                                        '• ${it.itemName} (x${it.quantity})',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(fontSize: 11.5, color: Colors.grey.shade800),
-                                      );
-                                    }).toList(),
+                                  InkWell(
+                                    onTap: () => _showOrderDetailsModal(context, order),
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 6),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          for (var i = 0; i < order.items.length && i < 2; i++) ...[
+                                            Padding(
+                                              padding: const EdgeInsets.only(bottom: 4),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  ClipRRect(
+                                                    borderRadius: BorderRadius.circular(4),
+                                                    child: _buildImageOrFallback(order.items[i].imageUrl, width: 28, height: 28),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  ConstrainedBox(
+                                                    constraints: const BoxConstraints(maxWidth: 190),
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          order.items[i].itemName,
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
+                                                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: AppTheme.slate900),
+                                                        ),
+                                                        Text(
+                                                          'Qty: ${order.items[i].quantity} • Rs. ${order.items[i].priceLKR.toStringAsFixed(0)}',
+                                                          style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                          if (order.items.length > 2)
+                                            Text(
+                                              '+${order.items.length - 2} more items...',
+                                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
 
@@ -292,14 +332,28 @@ class _OrdersRentalsViewState extends State<OrdersRentalsView> {
                                 DataCell(
                                   Row(
                                     children: [
+                                      ElevatedButton.icon(
+                                        onPressed: () => _showOrderDetailsModal(context, order),
+                                        icon: const Icon(Icons.visibility_rounded, size: 13),
+                                        label: const Text('View Order'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppTheme.primaryBlue,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                                          textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
                                       if (order.paymentStatus == 'pending_verification')
                                         ElevatedButton(
                                           onPressed: () => _showBankSlipModal(context, order),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.amber.shade700,
                                             foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
                                             textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                                           ),
                                           child: const Text('Verify Slip'),
                                         ),
@@ -421,6 +475,540 @@ class _OrdersRentalsViewState extends State<OrdersRentalsView> {
     );
   }
 
+  Widget _buildImageOrFallback(String? imageUrl, {double? width, double? height, BoxFit fit = BoxFit.cover}) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return Container(
+        width: width,
+        height: height,
+        color: Colors.grey.shade100,
+        child: const Icon(Icons.medical_services_outlined, size: 18, color: Colors.grey),
+      );
+    }
+    if (imageUrl.startsWith('data:image')) {
+      try {
+        final base64Str = imageUrl.contains(',') ? imageUrl.split(',').last : imageUrl;
+        final bytes = base64Decode(base64Str);
+        return Image.memory(
+          bytes,
+          width: width,
+          height: height,
+          fit: fit,
+          errorBuilder: (_, __, ___) => Container(
+            width: width,
+            height: height,
+            color: Colors.grey.shade100,
+            child: const Icon(Icons.broken_image, size: 18, color: Colors.grey),
+          ),
+        );
+      } catch (_) {}
+    }
+    return Image.network(
+      imageUrl,
+      width: width,
+      height: height,
+      fit: fit,
+      errorBuilder: (_, __, ___) => Container(
+        width: width,
+        height: height,
+        color: Colors.grey.shade100,
+        child: const Icon(Icons.medical_services_outlined, size: 18, color: Colors.grey),
+      ),
+    );
+  }
+
+  void _showFullscreenSlip(BuildContext context, String slipUrl) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Stack(
+          alignment: Alignment.topRight,
+          children: [
+            InteractiveViewer(
+              child: _buildImageOrFallback(slipUrl, fit: BoxFit.contain),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 28),
+              onPressed: () => Navigator.pop(ctx),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showOrderDetailsModal(BuildContext context, OrderModel order) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        String currentStatus = order.orderStatus;
+        return StatefulBuilder(
+          builder: (dialogCtx, setDialogState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Container(
+                width: 660,
+                constraints: BoxConstraints(maxHeight: MediaQuery.of(dialogCtx).size.height * 0.9),
+                padding: const EdgeInsets.all(22),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryBlue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.shopping_bag_outlined, color: AppTheme.primaryBlue, size: 22),
+                            ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      order.orderCode,
+                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.slate900),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    if (order.isRental)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.purple.shade50,
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: Colors.purple.shade200),
+                                        ),
+                                        child: Text(
+                                          'EQUIPMENT RENTAL',
+                                          style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.purple.shade800),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Ordered: ${order.createdAt}',
+                                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(dialogCtx),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 20),
+
+                    // Scrollable content body
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Customer and Delivery Card
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'Customer & Delivery Destination',
+                                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppTheme.slate900),
+                                      ),
+                                      WhatsAppButton(
+                                        phoneNumber: order.customerPhone,
+                                        customMessage: 'Hello ${order.customerName}, regarding your Prime Life Care Order ${order.orderCode}.',
+                                        label: 'WhatsApp Customer',
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 16,
+                                    runSpacing: 6,
+                                    children: [
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.person_outline, size: 16, color: Colors.grey),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            order.customerName,
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.slate900),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.phone_outlined, size: 16, color: Colors.grey),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            order.customerPhone,
+                                            style: TextStyle(fontSize: 12.5, color: Colors.grey.shade800, fontWeight: FontWeight.w500),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          '${order.deliveryAddress} (${order.district})',
+                                          style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Items List Card
+                            const Text(
+                              'Ordered Items & Quantities',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.slate900),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Column(
+                                  children: [
+                                    for (var i = 0; i < order.items.length; i++) ...[
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                        color: i.isEven ? Colors.white : Colors.grey.shade50,
+                                        child: Row(
+                                          children: [
+                                            ClipRRect(
+                                              borderRadius: BorderRadius.circular(8),
+                                              child: _buildImageOrFallback(order.items[i].imageUrl, width: 44, height: 44),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    order.items[i].itemName,
+                                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.slate900),
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    'Unit Price: LKR ${order.items[i].priceLKR.toStringAsFixed(0)}',
+                                                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue.shade50,
+                                                borderRadius: BorderRadius.circular(6),
+                                                border: Border.all(color: Colors.blue.shade200),
+                                              ),
+                                              child: Text(
+                                                'Qty: ${order.items[i].quantity}',
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5, color: AppTheme.primaryBlue),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Text(
+                                              'LKR ${(order.items[i].priceLKR * order.items[i].quantity).toStringAsFixed(0)}',
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.slate900),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (i < order.items.length - 1)
+                                        const Divider(height: 1, thickness: 1),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+
+                            // Total & Payment Summary Card
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade50.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.blue.shade100),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Text(
+                                            'Payment Method: ',
+                                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.slate900),
+                                          ),
+                                          Text(
+                                            order.paymentMethod == 'cod' ? 'Cash on Delivery (COD)' : 'Direct Bank Transfer',
+                                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          const Text('Payment Status: ', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                          _buildPaymentStatusBadge(order.paymentStatus),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      const Text('Total Amount', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                      Text(
+                                        currencyFormat.format(order.totalAmountLKR),
+                                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Bank Transfer Slip Section (if applicable)
+                            if (order.paymentMethod != 'cod') ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber.shade50.withOpacity(0.4),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.amber.shade200),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Row(
+                                          children: [
+                                            Icon(Icons.receipt_long, size: 18, color: Colors.amber),
+                                            SizedBox(width: 6),
+                                            Text(
+                                              'Bank Deposit Slip & Verification',
+                                              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppTheme.slate900),
+                                            ),
+                                          ],
+                                        ),
+                                        if (order.paymentStatus == 'pending_verification')
+                                          ElevatedButton.icon(
+                                            onPressed: () {
+                                              context.read<AdminProvider>().approveBankTransfer(order.id);
+                                              setDialogState(() {
+                                                currentStatus = 'dispatched';
+                                              });
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text('Payment approved for ${order.orderCode}! Order marked as Dispatched.'),
+                                                  backgroundColor: AppTheme.emeraldGreen,
+                                                ),
+                                              );
+                                            },
+                                            icon: const Icon(Icons.check, size: 14),
+                                            label: const Text('Approve Slip & Mark Paid'),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: AppTheme.emeraldGreen,
+                                              foregroundColor: Colors.white,
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                              textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    if (order.bankReference != null && order.bankReference!.isNotEmpty) ...[
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        'Bank Reference: ${order.bankReference}',
+                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.slate900),
+                                      ),
+                                    ],
+                                    const SizedBox(height: 10),
+                                    if (order.bankSlipUrl != null && order.bankSlipUrl!.isNotEmpty)
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: InkWell(
+                                          onTap: () => _showFullscreenSlip(context, order.bankSlipUrl!),
+                                          child: Container(
+                                            constraints: const BoxConstraints(maxHeight: 220),
+                                            width: double.infinity,
+                                            color: Colors.black12,
+                                            child: Stack(
+                                              alignment: Alignment.center,
+                                              children: [
+                                                _buildImageOrFallback(order.bankSlipUrl, width: double.infinity, height: 220),
+                                                Positioned(
+                                                  bottom: 8,
+                                                  right: 8,
+                                                  child: Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.black87,
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: const Row(
+                                                      children: [
+                                                        Icon(Icons.zoom_in, color: Colors.white, size: 14),
+                                                        SizedBox(width: 4),
+                                                        Text('Click to Zoom Slip', style: TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold)),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    else
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        width: double.infinity,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.grey.shade300),
+                                        ),
+                                        child: Text(
+                                          'No deposit slip image attached by customer.',
+                                          style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600, fontStyle: FontStyle.italic),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Divider(height: 20),
+
+                    // Footer with Status Changer and Invoice
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Text('Order Status: ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey.shade300),
+                                borderRadius: BorderRadius.circular(8),
+                                color: Colors.white,
+                              ),
+                              child: DropdownButton<String>(
+                                value: currentStatus,
+                                underline: const SizedBox(),
+                                isDense: true,
+                                items: const [
+                                  DropdownMenuItem(value: 'pending', child: Text('Pending', style: TextStyle(fontSize: 12))),
+                                  DropdownMenuItem(value: 'dispatched', child: Text('Dispatched', style: TextStyle(fontSize: 12))),
+                                  DropdownMenuItem(value: 'delivered', child: Text('Delivered', style: TextStyle(fontSize: 12))),
+                                  DropdownMenuItem(value: 'cancelled', child: Text('Cancelled', style: TextStyle(fontSize: 12))),
+                                ],
+                                onChanged: (newStatus) {
+                                  if (newStatus != null) {
+                                    context.read<AdminProvider>().updateOrderStatus(order.id, newStatus);
+                                    setDialogState(() {
+                                      currentStatus = newStatus;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => InvoiceDialog(
+                                    invoiceCode: order.orderCode,
+                                    clientName: order.customerName,
+                                    clientPhone: order.customerPhone,
+                                    serviceOrItemName: order.items.map((i) => '${i.itemName} (x${i.quantity})').join(', '),
+                                    date: order.createdAt,
+                                    totalLKR: order.totalAmountLKR,
+                                    status: order.paymentStatus == 'paid' ? 'Paid' : 'Pending',
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.receipt_outlined, size: 15),
+                              label: const Text('Digital Invoice', style: TextStyle(fontSize: 12)),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(dialogCtx),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.primaryBlue,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text('Done', style: TextStyle(fontSize: 12)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showBankSlipModal(BuildContext context, OrderModel order) {
     showDialog(
       context: context,
@@ -448,19 +1036,19 @@ class _OrdersRentalsViewState extends State<OrdersRentalsView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Bank Account:', style: TextStyle(fontWeight: FontWeight.bold)),
-                        const Text('Commercial Bank of Ceylon'),
+                        Text('Bank Account:', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('Commercial Bank of Ceylon'),
                       ],
                     ),
                     const SizedBox(height: 6),
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Account Name:', style: TextStyle(fontWeight: FontWeight.bold)),
-                        const Text('Prime Life Care (Pvt) Ltd'),
+                        Text('Account Name:', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('Prime Life Care (Pvt) Ltd'),
                       ],
                     ),
                     const SizedBox(height: 6),
@@ -474,40 +1062,43 @@ class _OrdersRentalsViewState extends State<OrdersRentalsView> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Attached Slip Filename:', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text(order.bankSlipUrl ?? 'slip_receipt.jpg', style: const TextStyle(color: Colors.grey)),
-                      ],
-                    ),
+                    if (order.bankReference != null && order.bankReference!.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Bank Reference:', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text(order.bankReference!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
               const SizedBox(height: 16),
-              Container(
-                height: 180,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+              if (order.bankSlipUrl != null && order.bankSlipUrl!.isNotEmpty)
+                ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.grey.shade300),
+                  child: Container(
+                    height: 220,
+                    width: double.infinity,
+                    color: Colors.grey.shade100,
+                    child: _buildImageOrFallback(order.bankSlipUrl, fit: BoxFit.contain),
+                  ),
+                )
+              else
+                Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: const Center(
+                    child: Text('No deposit slip image attached by customer.'),
+                  ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.receipt, size: 48, color: Colors.blueGrey),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Customer Slip Preview: ${order.bankSlipUrl ?? "commercial_bank_ref_8932.jpg"}',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 4),
-                    Text('Bank Ref: CMB-2026-98124 | Branch: Dehiwala', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-                  ],
-                ),
-              ),
             ],
           ),
         ),

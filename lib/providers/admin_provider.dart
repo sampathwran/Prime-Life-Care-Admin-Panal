@@ -2596,7 +2596,8 @@ class AdminProvider extends ChangeNotifier {
   int get activeShiftsCount => _caregivers.where((c) => c.status == 'on_duty').length;
   int get pendingDispatchesCount => _bookings.where((b) => b.status == 'pending_review').length;
   int get pendingOrdersCount => _orders.where((o) => o.paymentStatus == 'pending_verification' || o.orderStatus == 'pending').length;
-  int get lowStockItemsCount => _medicalItems.where((m) => m.stock <= 5).length;
+  int get lowStockItemsCount => _medicalItems.where((m) => m.stock > 0 && m.stock <= 2).length;
+  int get outOfStockItemsCount => _medicalItems.where((m) => m.stock <= 0).length;
   int get activeRentalsCount => _orders.where((o) => o.isRental && o.orderStatus != 'cancelled').length;
 
   @override
