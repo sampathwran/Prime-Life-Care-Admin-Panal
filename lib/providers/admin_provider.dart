@@ -2363,6 +2363,24 @@ class AdminProvider extends ChangeNotifier {
         description: 'Home delivery and setup of hospital beds, oxygen concentrators, and ripple mattresses.',
         isPublished: true,
       ),
+      GalleryItemModel(
+        id: 'gal_07',
+        title: 'Medication Management & Doctor Consultations',
+        titleSi: 'නියමිත ඖෂධ ලබාදීම සහ වෛද්‍ය උපදෙස් පිළිපැදීම',
+        imageUrl: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=800',
+        category: 'Clinical Nursing',
+        description: 'Accurate pill organizer tracking, insulin administration and dosage compliance.',
+        isPublished: true,
+      ),
+      GalleryItemModel(
+        id: 'gal_08',
+        title: 'Happy Seniors & Joyful Home Environment',
+        titleSi: 'සතුටුදායක සහ ආදරණීය නිවසේ රැකවරණ පරිසරය',
+        imageUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=800',
+        category: 'Elderly Care',
+        description: 'Providing genuine smile, warmth, and peace of mind for families in Sri Lanka.',
+        isPublished: true,
+      ),
     ];
   }
 
