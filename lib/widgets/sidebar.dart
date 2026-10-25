@@ -20,6 +20,7 @@ class Sidebar extends StatelessWidget {
     '/orders',
     '/clinical-logs',
     '/reviews',
+    '/gallery',
     '/reports',
   ];
 
@@ -43,6 +44,7 @@ class Sidebar extends StatelessWidget {
       {'icon': Icons.local_shipping_rounded, 'label': 'Orders & Rentals'},
       {'icon': Icons.favorite_rounded, 'label': 'Clinical Logs & Vitals'},
       {'icon': Icons.star_rate_rounded, 'label': 'Google Reviews & Web'},
+      {'icon': Icons.photo_library_rounded, 'label': 'Image Gallery'},
       {'icon': Icons.analytics_rounded, 'label': 'Reports & Settings'},
     ];
 
@@ -274,6 +276,22 @@ class Sidebar extends StatelessWidget {
                                 ),
                                 child: Text(
                                   '${provider.publishedReviews.length}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+                            if (route == '/gallery' && provider.publishedGalleryItems.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? Colors.white.withValues(alpha: 0.25) : const Color(0xFF6366F1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${provider.publishedGalleryItems.length}',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 9,

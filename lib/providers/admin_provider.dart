@@ -9,6 +9,7 @@ import '../models/caregiver_model.dart';
 import '../models/clinical_log_model.dart';
 import '../models/user_model.dart';
 import '../models/review_model.dart';
+import '../models/gallery_item_model.dart';
 
 class AdminProvider extends ChangeNotifier {
   int _selectedNavIndex = 0;
@@ -44,6 +45,7 @@ class AdminProvider extends ChangeNotifier {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _caregiversSubscription;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _servicesSubscription;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _reviewsSubscription;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _gallerySubscription;
   bool _isFirebaseConnected = false;
   bool get isFirebaseConnected => _isFirebaseConnected;
 
@@ -217,6 +219,26 @@ class AdminProvider extends ChangeNotifier {
         }
       }, onError: (err) {
         debugPrint('[AdminProvider] Firestore reviews listen warning: $err');
+      });
+
+      // 9. Listen to Real-Time Photo Gallery (Auto-sync with Public Web)
+      _gallerySubscription = firestore
+          .collection('gallery')
+          .snapshots()
+          .listen((snapshot) {
+        _isFirebaseConnected = true;
+        if (snapshot.docs.isNotEmpty) {
+          _galleryItems = snapshot.docs.map((doc) {
+            return GalleryItemModel.fromMap(doc.data(), doc.id);
+          }).toList();
+          _galleryItems.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          notifyListeners();
+        } else {
+          // If Firestore is empty, auto-seed rich default gallery photos
+          _seedDefaultGalleryToFirestore();
+        }
+      }, onError: (err) {
+        debugPrint('[AdminProvider] Firestore gallery listen warning: $err');
       });
     } catch (e) {
       debugPrint('[AdminProvider] Firebase init warning: $e');
@@ -2201,6 +2223,149 @@ class AdminProvider extends ChangeNotifier {
     ];
   }
 
+  // ===================== IMAGE GALLERY & PHOTO SHOWCASE =====================
+  List<GalleryItemModel> _galleryItems = [];
+  List<GalleryItemModel> get galleryItems => _galleryItems;
+
+  List<GalleryItemModel> get publishedGalleryItems => _galleryItems.where((g) => g.isPublished).toList();
+
+  Future<void> _seedDefaultGalleryToFirestore() async {
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      for (final g in _getDefaultGalleryList()) {
+        final docRef = FirebaseFirestore.instance.collection('gallery').doc(g.id);
+        batch.set(docRef, g.toMap(), SetOptions(merge: true));
+      }
+      await batch.commit();
+      debugPrint('[AdminProvider] Seeded default photo gallery to Firestore');
+    } catch (e) {
+      debugPrint('[AdminProvider] Seed default gallery warning: $e');
+    }
+  }
+
+  Future<void> addGalleryItem(GalleryItemModel item) async {
+    final idx = _galleryItems.indexWhere((g) => g.id == item.id);
+    if (idx != -1) {
+      _galleryItems[idx] = item;
+    } else {
+      _galleryItems.insert(0, item);
+    }
+    notifyListeners();
+    try {
+      await FirebaseFirestore.instance
+          .collection('gallery')
+          .doc(item.id)
+          .set(item.toMap(), SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('[AdminProvider] addGalleryItem error: $e');
+    }
+  }
+
+  Future<void> updateGalleryItem(GalleryItemModel item) async {
+    final idx = _galleryItems.indexWhere((g) => g.id == item.id);
+    if (idx != -1) {
+      _galleryItems[idx] = item;
+      notifyListeners();
+    }
+    try {
+      await FirebaseFirestore.instance
+          .collection('gallery')
+          .doc(item.id)
+          .set(item.toMap(), SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('[AdminProvider] updateGalleryItem error: $e');
+    }
+  }
+
+  Future<void> toggleGalleryItemPublished(String itemId, bool isPublished) async {
+    final idx = _galleryItems.indexWhere((g) => g.id == itemId);
+    if (idx != -1) {
+      _galleryItems[idx] = _galleryItems[idx].copyWith(isPublished: isPublished);
+      notifyListeners();
+      try {
+        await FirebaseFirestore.instance
+            .collection('gallery')
+            .doc(itemId)
+            .update({'isPublished': isPublished});
+      } catch (e) {
+        debugPrint('[AdminProvider] toggleGalleryItemPublished error: $e');
+      }
+    }
+  }
+
+  Future<void> deleteGalleryItem(String itemId) async {
+    _galleryItems.removeWhere((g) => g.id == itemId);
+    notifyListeners();
+    try {
+      await FirebaseFirestore.instance.collection('gallery').doc(itemId).delete();
+    } catch (e) {
+      debugPrint('[AdminProvider] deleteGalleryItem error: $e');
+    }
+  }
+
+  Future<void> seedDefaultGallery() async {
+    await _seedDefaultGalleryToFirestore();
+  }
+
+  List<GalleryItemModel> _getDefaultGalleryList() {
+    return [
+      GalleryItemModel(
+        id: 'gal_01',
+        title: 'In-Home Senior Vital Monitoring',
+        titleSi: 'නිවසේදී රෝගී දෛනික සෞඛ්‍ය පරීක්ෂාව',
+        imageUrl: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=800',
+        category: 'Clinical Nursing',
+        description: 'Qualified nursing aide monitoring blood pressure and vital signs at patient residence.',
+        isPublished: true,
+      ),
+      GalleryItemModel(
+        id: 'gal_02',
+        title: 'Compassionate Elderly Companionship',
+        titleSi: 'වැඩිහිටියන් රැකබලාගැනීම සහ මිත්‍රශීලී සහාය',
+        imageUrl: 'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?auto=format&fit=crop&q=80&w=800',
+        category: 'Elderly Care',
+        description: 'Gentle daily assistance, companionship, and mobility exercises for senior parents.',
+        isPublished: true,
+      ),
+      GalleryItemModel(
+        id: 'gal_03',
+        title: 'Post-Surgery Bedside Rehabilitation',
+        titleSi: 'ශල්‍යකර්ම පසු රෝගී ඇඳ විවේක සත්කාරය',
+        imageUrl: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=800',
+        category: 'Clinical Nursing',
+        description: 'Assisted bed positioning, recovery management and surgical wound dressing.',
+        isPublished: true,
+      ),
+      GalleryItemModel(
+        id: 'gal_04',
+        title: 'Physical Therapy & Assisted Walking',
+        titleSi: 'භෞත චිකිත්සක සහ ඇවිදීමේ සහායක සේවය',
+        imageUrl: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=800',
+        category: 'Physiotherapy',
+        description: 'Guided mobility training, limb movement, and stroke rehabilitation exercises.',
+        isPublished: true,
+      ),
+      GalleryItemModel(
+        id: 'gal_05',
+        title: 'Caregiver Training & Hygiene Standards',
+        titleSi: 'සාත්තු සේවක පුහුණුව සහ සනීපාරක්ෂක ප්‍රමිතීන්',
+        imageUrl: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=800',
+        category: 'Staff Training',
+        description: 'Continuous hospital-grade infection control and caregiver qualification workshops.',
+        isPublished: true,
+      ),
+      GalleryItemModel(
+        id: 'gal_06',
+        title: 'Specialized Medical Equipment Setup',
+        titleSi: 'රෝහල් ඇඳන් සහ උපකරණ නිවසේ ස්ථාපනය',
+        imageUrl: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800',
+        category: 'Medical Equipment',
+        description: 'Home delivery and setup of hospital beds, oxygen concentrators, and ripple mattresses.',
+        isPublished: true,
+      ),
+    ];
+  }
+
   // ===================== METRICS GETTERS =====================
   double get totalRevenueLKR {
     double total = 0;
@@ -2230,6 +2395,7 @@ class AdminProvider extends ChangeNotifier {
     _caregiversSubscription?.cancel();
     _servicesSubscription?.cancel();
     _reviewsSubscription?.cancel();
+    _gallerySubscription?.cancel();
     super.dispose();
   }
 }
