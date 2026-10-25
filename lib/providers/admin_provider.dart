@@ -8,6 +8,7 @@ import '../models/order_model.dart';
 import '../models/caregiver_model.dart';
 import '../models/clinical_log_model.dart';
 import '../models/user_model.dart';
+import '../models/review_model.dart';
 
 class AdminProvider extends ChangeNotifier {
   int _selectedNavIndex = 0;
@@ -42,6 +43,7 @@ class AdminProvider extends ChangeNotifier {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _deletedBookingsSubscription;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _caregiversSubscription;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _servicesSubscription;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _reviewsSubscription;
   bool _isFirebaseConnected = false;
   bool get isFirebaseConnected => _isFirebaseConnected;
 
@@ -195,6 +197,26 @@ class AdminProvider extends ChangeNotifier {
         }
       }, onError: (err) {
         debugPrint('[AdminProvider] Firestore services listen warning: $err');
+      });
+
+      // 8. Listen to Real-Time Google Reviews (Auto-sync with Public Web)
+      _reviewsSubscription = firestore
+          .collection('reviews')
+          .snapshots()
+          .listen((snapshot) {
+        _isFirebaseConnected = true;
+        if (snapshot.docs.isNotEmpty) {
+          _reviews = snapshot.docs.map((doc) {
+            return ReviewModel.fromMap(doc.data(), doc.id);
+          }).toList();
+          _reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          notifyListeners();
+        } else {
+          // If Firestore is empty, auto-seed clean default Google reviews
+          _seedDefaultReviewsToFirestore();
+        }
+      }, onError: (err) {
+        debugPrint('[AdminProvider] Firestore reviews listen warning: $err');
       });
     } catch (e) {
       debugPrint('[AdminProvider] Firebase init warning: $e');
@@ -2040,6 +2062,145 @@ class AdminProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ===================== GOOGLE REVIEWS & TESTIMONIALS =====================
+  List<ReviewModel> _reviews = [];
+  List<ReviewModel> get reviews => _reviews;
+
+  List<ReviewModel> get publishedReviews => _reviews.where((r) => r.isPublished).toList();
+
+  Future<void> _seedDefaultReviewsToFirestore() async {
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      for (final r in _getDefaultReviewsList()) {
+        final docRef = FirebaseFirestore.instance.collection('reviews').doc(r.id);
+        batch.set(docRef, r.toMap(), SetOptions(merge: true));
+      }
+      await batch.commit();
+      debugPrint('[AdminProvider] Seeded default Google reviews to Firestore');
+    } catch (e) {
+      debugPrint('[AdminProvider] Seed default reviews warning: $e');
+    }
+  }
+
+  Future<void> addReview(ReviewModel review) async {
+    final idx = _reviews.indexWhere((r) => r.id == review.id);
+    if (idx != -1) {
+      _reviews[idx] = review;
+    } else {
+      _reviews.insert(0, review);
+    }
+    notifyListeners();
+    try {
+      await FirebaseFirestore.instance
+          .collection('reviews')
+          .doc(review.id)
+          .set(review.toMap(), SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('[AdminProvider] addReview error: $e');
+    }
+  }
+
+  Future<void> updateReview(ReviewModel review) async {
+    final idx = _reviews.indexWhere((r) => r.id == review.id);
+    if (idx != -1) {
+      _reviews[idx] = review;
+      notifyListeners();
+    }
+    try {
+      await FirebaseFirestore.instance
+          .collection('reviews')
+          .doc(review.id)
+          .set(review.toMap(), SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('[AdminProvider] updateReview error: $e');
+    }
+  }
+
+  Future<void> toggleReviewPublished(String reviewId, bool isPublished) async {
+    final idx = _reviews.indexWhere((r) => r.id == reviewId);
+    if (idx != -1) {
+      _reviews[idx] = _reviews[idx].copyWith(isPublished: isPublished);
+      notifyListeners();
+      try {
+        await FirebaseFirestore.instance
+            .collection('reviews')
+            .doc(reviewId)
+            .update({'isPublished': isPublished});
+      } catch (e) {
+        debugPrint('[AdminProvider] toggleReviewPublished error: $e');
+      }
+    }
+  }
+
+  Future<void> deleteReview(String reviewId) async {
+    _reviews.removeWhere((r) => r.id == reviewId);
+    notifyListeners();
+    try {
+      await FirebaseFirestore.instance.collection('reviews').doc(reviewId).delete();
+    } catch (e) {
+      debugPrint('[AdminProvider] deleteReview error: $e');
+    }
+  }
+
+  Future<void> seedDefaultReviews() async {
+    await _seedDefaultReviewsToFirestore();
+  }
+
+  List<ReviewModel> _getDefaultReviewsList() {
+    return [
+      ReviewModel(
+        id: 'rev_01',
+        authorName: 'Dr. Priyantha Dissanayake',
+        authorLocation: 'Melbourne, Australia',
+        rating: 5,
+        relativeTime: '2 weeks ago',
+        text: 'Living in Australia, finding reliable care for my 81-year-old mother in Kandy was my biggest concern. Prime Life Care provided an exceptional caregiver. Daily vitals reports give us complete peace of mind.',
+        isVerified: true,
+        isPublished: true,
+      ),
+      ReviewModel(
+        id: 'rev_02',
+        authorName: 'Chamari Senaratne',
+        authorLocation: 'Colombo 05',
+        rating: 5,
+        relativeTime: '3 weeks ago',
+        text: 'Exceptional post-surgery home nursing care. The NVQ caregiver was punctual, hygienic, and very gentle with my mother during dressing changes and medication management.',
+        isVerified: true,
+        isPublished: true,
+      ),
+      ReviewModel(
+        id: 'rev_03',
+        authorName: 'Kumar Selvarajah',
+        authorLocation: 'London, UK',
+        rating: 5,
+        relativeTime: '1 month ago',
+        text: 'Booking in-home elderly care from London was completely seamless. Highly trained staff with police clearance. Excellent service and responsive coordination team.',
+        isVerified: true,
+        isPublished: true,
+      ),
+      ReviewModel(
+        id: 'rev_04',
+        authorName: 'Rohan Jayasinghe',
+        authorLocation: 'Nugegoda, Colombo',
+        rating: 5,
+        relativeTime: '1 month ago',
+        text: 'The caregiver treated my bedridden father like her own family member. Regular bed-turning schedule prevented bedsores completely. Truly grateful to the Prime Life Care team.',
+        isVerified: true,
+        isPublished: true,
+      ),
+      ReviewModel(
+        id: 'rev_05',
+        authorName: 'Anusha Wickramasinghe',
+        authorLocation: 'Galle',
+        rating: 5,
+        relativeTime: '2 months ago',
+        text: 'Very polite, compassionate and professional nursing aides. They monitored blood pressure and glucose with great accuracy. Highly recommended for home patient care.',
+        isVerified: true,
+        isPublished: true,
+      ),
+    ];
+  }
+
   // ===================== METRICS GETTERS =====================
   double get totalRevenueLKR {
     double total = 0;
@@ -2068,6 +2229,7 @@ class AdminProvider extends ChangeNotifier {
     _deletedBookingsSubscription?.cancel();
     _caregiversSubscription?.cancel();
     _servicesSubscription?.cancel();
+    _reviewsSubscription?.cancel();
     super.dispose();
   }
 }

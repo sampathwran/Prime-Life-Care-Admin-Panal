@@ -19,6 +19,7 @@ class Sidebar extends StatelessWidget {
     '/inventory',
     '/orders',
     '/clinical-logs',
+    '/reviews',
     '/reports',
   ];
 
@@ -41,6 +42,7 @@ class Sidebar extends StatelessWidget {
       {'icon': Icons.storefront_rounded, 'label': 'Medical Store Inventory'},
       {'icon': Icons.local_shipping_rounded, 'label': 'Orders & Rentals'},
       {'icon': Icons.favorite_rounded, 'label': 'Clinical Logs & Vitals'},
+      {'icon': Icons.star_rate_rounded, 'label': 'Google Reviews & Web'},
       {'icon': Icons.analytics_rounded, 'label': 'Reports & Settings'},
     ];
 
@@ -258,6 +260,22 @@ class Sidebar extends StatelessWidget {
                                   '${provider.pendingOrdersCount}',
                                   style: TextStyle(
                                     color: isSelected ? AppTheme.primaryBlue : Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+                            if (route == '/reviews' && provider.publishedReviews.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? Colors.white.withValues(alpha: 0.25) : Colors.amber.shade700,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${provider.publishedReviews.length}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
                                     fontSize: 9,
                                     fontWeight: FontWeight.w900,
                                   ),

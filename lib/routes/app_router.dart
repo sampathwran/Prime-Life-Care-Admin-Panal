@@ -9,6 +9,7 @@ import '../views/orders_rentals_view.dart';
 import '../views/staff_directory_view.dart';
 import '../views/staff_approvals_view.dart';
 import '../views/clinical_logs_view.dart';
+import '../views/reviews_manager_view.dart';
 import '../views/reports_settings_view.dart';
 
 final appRouter = GoRouter(
@@ -78,6 +79,12 @@ final appRouter = GoRouter(
           path: '/clinical-logs',
           pageBuilder: (context, state) => const NoTransitionPage(
             child: ClinicalLogsView(),
+          ),
+        ),
+        GoRoute(
+          path: '/reviews',
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: ReviewsManagerView(),
           ),
         ),
         GoRoute(
