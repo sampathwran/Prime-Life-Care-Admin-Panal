@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import '../providers/admin_provider.dart';
 import '../models/medical_item_model.dart';
+import '../models/store_category_model.dart';
 import '../theme/app_theme.dart';
 import '../widgets/charts/inventory_rental_chart.dart';
 
@@ -65,6 +66,17 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
               ),
               Row(
                 children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _openCategoryManagerDialog(context),
+                    icon: const Icon(Icons.category_rounded, size: 14),
+                    label: const Text('Manage Categories', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.primaryBlue,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   OutlinedButton.icon(
                     onPressed: () async {
                       final confirmed = await showDialog<bool>(
@@ -166,29 +178,51 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                   child: Row(
                     children: [
                       _buildCatChip('All Products', 'all', provider.medicalItems.length),
+                      ...provider.storeCategories.map((cat) {
+                        final count = provider.medicalItems.where((m) => m.category == cat.id).length;
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 6),
+                          child: _buildCatChip(cat.nameEn, cat.id, count),
+                        );
+                      }),
+                      ...provider.medicalItems
+                          .map((m) => m.category)
+                          .toSet()
+                          .where((cId) => !provider.storeCategories.any((cat) => cat.id == cId))
+                          .map((extraCat) => Padding(
+                                padding: const EdgeInsets.only(left: 6),
+                                child: _buildCatChip(
+                                  extraCat.isNotEmpty ? (extraCat[0].toUpperCase() + extraCat.substring(1)) : 'General',
+                                  extraCat,
+                                  provider.medicalItems.where((m) => m.category == extraCat).length,
+                                ),
+                              )),
                       const SizedBox(width: 6),
-                      _buildCatChip(
-                        'Equipment',
-                        'equipment',
-                        provider.medicalItems.where((m) => m.category == 'equipment').length,
-                      ),
-                      const SizedBox(width: 6),
-                      _buildCatChip(
-                        'Mobility',
-                        'mobility',
-                        provider.medicalItems.where((m) => m.category == 'mobility').length,
-                      ),
-                      const SizedBox(width: 6),
-                      _buildCatChip(
-                        'Hygiene & Diapers',
-                        'hygiene',
-                        provider.medicalItems.where((m) => m.category == 'hygiene').length,
-                      ),
-                      const SizedBox(width: 6),
-                      _buildCatChip(
-                        'Vitals Monitoring',
-                        'monitoring',
-                        provider.medicalItems.where((m) => m.category == 'monitoring').length,
+                      InkWell(
+                        onTap: () => _openCategoryManagerDialog(context),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.blue.shade200),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.add_circle_outline, size: 12, color: AppTheme.primaryBlue),
+                              SizedBox(width: 4),
+                              Text(
+                                '+ Add Category',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primaryBlue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -637,6 +671,16 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
 
   void _openItemDialog(BuildContext context, MedicalItemModel? existing) {
     final isEditing = existing != null;
+    final provider = context.read<AdminProvider>();
+    final availableCategories = List<StoreCategoryModel>.from(provider.storeCategories);
+    if (existing != null && !availableCategories.any((c) => c.id == existing.category)) {
+      availableCategories.add(StoreCategoryModel(
+        id: existing.category,
+        nameEn: existing.category.isNotEmpty ? (existing.category[0].toUpperCase() + existing.category.substring(1)) : 'General',
+        nameSi: existing.category,
+      ));
+    }
+
     final nameEnCtrl = TextEditingController(text: existing?.nameEn ?? '');
     final nameSiCtrl = TextEditingController(text: existing?.nameSi ?? '');
     final brandCtrl = TextEditingController(text: existing?.brand ?? 'Prime Medical');
@@ -654,7 +698,7 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
     final singleUrlCtrl = TextEditingController();
 
     List<String> imageUrls = List<String>.from(existing?.imageUrls ?? []);
-    String category = existing?.category ?? 'equipment';
+    String category = existing?.category ?? (availableCategories.isNotEmpty ? availableCategories.first.id : 'equipment');
     bool canRent = existing?.canRent ?? false;
 
     showDialog(
@@ -751,20 +795,54 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: category,
+                            value: availableCategories.any((c) => c.id == category)
+                                ? category
+                                : (availableCategories.isNotEmpty ? availableCategories.first.id : 'equipment'),
                             decoration: const InputDecoration(
-                              labelText: 'Category',
+                              labelText: 'Category *',
                               border: OutlineInputBorder(),
                               isDense: true,
                             ),
-                            items: const [
-                              DropdownMenuItem(value: 'equipment', child: Text('Equipment (Beds, Pumps)')),
-                              DropdownMenuItem(value: 'mobility', child: Text('Mobility (Wheelchairs)')),
-                              DropdownMenuItem(value: 'hygiene', child: Text('Hygiene & Diapers')),
-                              DropdownMenuItem(value: 'monitoring', child: Text('Vitals Monitoring')),
+                            items: [
+                              ...availableCategories.map((c) => DropdownMenuItem(
+                                    value: c.id,
+                                    child: Text(
+                                      '${c.nameEn} (${c.nameSi})',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 11.5),
+                                    ),
+                                  )),
+                              const DropdownMenuItem(
+                                value: '__new_category__',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.add_circle_outline, size: 14, color: AppTheme.primaryBlue),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      '+ Add New Category...',
+                                      style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                             onChanged: (val) {
-                              if (val != null) setDialogState(() => category = val);
+                              if (val == '__new_category__') {
+                                _showQuickAddCategoryDialog(context, (newCatId) {
+                                  setDialogState(() {
+                                    category = newCatId;
+                                    final newCat = context.read<AdminProvider>().storeCategories.firstWhere(
+                                          (c) => c.id == newCatId,
+                                          orElse: () => StoreCategoryModel(id: newCatId, nameEn: newCatId, nameSi: newCatId),
+                                        );
+                                    if (!availableCategories.any((c) => c.id == newCatId)) {
+                                      availableCategories.add(newCat);
+                                    }
+                                  });
+                                });
+                              } else if (val != null) {
+                                setDialogState(() => category = val);
+                              }
                             },
                           ),
                         ),
@@ -1162,6 +1240,379 @@ class _StoreInventoryViewState extends State<StoreInventoryView> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 ),
                 child: Text(isEditing ? 'Save Product' : 'Add to Catalog'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _showQuickAddCategoryDialog(BuildContext context, ValueChanged<String> onAdded) {
+    final nameEnCtrl = TextEditingController();
+    final nameSiCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Row(
+          children: [
+            Icon(Icons.add_circle_outline, color: AppTheme.primaryBlue, size: 20),
+            SizedBox(width: 8),
+            Text('Add New Product Category', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameEnCtrl,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Category Name (English) *',
+                hintText: 'e.g. Respiratory & Oxygen',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: nameSiCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Category Name (Sinhala)',
+                hintText: 'e.g. ශ්වසන සහ ඔක්සිජන් උපකරණ',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              final en = nameEnCtrl.text.trim();
+              if (en.isEmpty) return;
+              final si = nameSiCtrl.text.trim().isNotEmpty ? nameSiCtrl.text.trim() : en;
+              final slug = en
+                  .toLowerCase()
+                  .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+                  .replaceAll(RegExp(r'^_+|_+$'), '');
+
+              final newCat = StoreCategoryModel(
+                id: slug.isNotEmpty ? slug : 'cat_${DateTime.now().millisecondsSinceEpoch}',
+                nameEn: en,
+                nameSi: si,
+                sortOrder: 99,
+                isDefault: false,
+              );
+
+              context.read<AdminProvider>().addStoreCategory(newCat);
+              onAdded(newCat.id);
+              Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue),
+            child: const Text('Add & Select', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openCategoryManagerDialog(BuildContext context) {
+    final nameEnCtrl = TextEditingController();
+    final nameSiCtrl = TextEditingController();
+    final idCtrl = TextEditingController();
+    bool isCustomId = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final provider = ctx.watch<AdminProvider>();
+          final categories = provider.storeCategories;
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            titlePadding: const EdgeInsets.fromLTRB(20, 16, 20, 10),
+            contentPadding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
+            actionsPadding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryBlue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.category_rounded, color: AppTheme.primaryBlue, size: 20),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Manage Store Item Categories',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 18),
+                  onPressed: () => Navigator.pop(dialogCtx),
+                ),
+              ],
+            ),
+            content: SizedBox(
+              width: 580,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Create and organize product categories for the public Medical Store and Admin Inventory. Changes sync live with the website.',
+                      style: TextStyle(fontSize: 11.5, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Add Category Card
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.blue.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.add_circle, size: 15, color: AppTheme.primaryBlue),
+                              SizedBox(width: 6),
+                              Text(
+                                'Add New Category',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.slate900),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: nameEnCtrl,
+                                  onChanged: (val) {
+                                    if (!isCustomId) {
+                                      final slug = val
+                                          .trim()
+                                          .toLowerCase()
+                                          .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+                                          .replaceAll(RegExp(r'^_+|_+$'), '');
+                                      idCtrl.text = slug;
+                                      setDialogState(() {});
+                                    }
+                                  },
+                                  decoration: const InputDecoration(
+                                    labelText: 'Category Name (English) *',
+                                    hintText: 'e.g. Respiratory & Oxygen Equipment',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                    fillColor: Colors.white,
+                                    filled: true,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: TextField(
+                                  controller: nameSiCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Category Name (Sinhala)',
+                                    hintText: 'e.g. ශ්වසන සහ ඔක්සිජන් උපකරණ',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                    fillColor: Colors.white,
+                                    filled: true,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: idCtrl,
+                                  onChanged: (_) => isCustomId = true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Category Key / ID (slug)',
+                                    hintText: 'e.g. respiratory_oxygen',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                    fillColor: Colors.white,
+                                    filled: true,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  final en = nameEnCtrl.text.trim();
+                                  final si = nameSiCtrl.text.trim();
+                                  var id = idCtrl.text.trim().toLowerCase();
+                                  if (en.isEmpty) return;
+                                  if (id.isEmpty) {
+                                    id = en.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+                                  }
+
+                                  final newCat = StoreCategoryModel(
+                                    id: id,
+                                    nameEn: en,
+                                    nameSi: si.isNotEmpty ? si : en,
+                                    sortOrder: categories.length + 1,
+                                    isDefault: false,
+                                  );
+
+                                  await ctx.read<AdminProvider>().addStoreCategory(newCat);
+                                  nameEnCtrl.clear();
+                                  nameSiCtrl.clear();
+                                  idCtrl.clear();
+                                  isCustomId = false;
+                                  setDialogState(() {});
+                                },
+                                icon: const Icon(Icons.add, size: 14),
+                                label: const Text('Add Category', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primaryBlue,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Existing Categories Table
+                    const Text(
+                      'All Active Categories',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.slate900),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: categories.length,
+                        separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.shade200),
+                        itemBuilder: (context, idx) {
+                          final cat = categories[idx];
+                          final count = provider.medicalItems.where((m) => m.category == cat.id).length;
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Icon(Icons.folder_outlined, size: 16, color: AppTheme.slate900),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        cat.nameEn,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                      ),
+                                      Text(
+                                        '${cat.nameSi} • Key: ${cat.id}',
+                                        style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: count > 0 ? Colors.green.shade50 : Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: count > 0 ? Colors.green.shade200 : Colors.grey.shade300),
+                                  ),
+                                  child: Text(
+                                    '$count items',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: count > 0 ? Colors.green.shade800 : Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                if (!cat.isDefault)
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                                    tooltip: 'Delete Category',
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (c) => AlertDialog(
+                                          title: const Text('Delete Category?'),
+                                          content: Text('Are you sure you want to delete category "${cat.nameEn}"? Items using this category will remain, but the category filter pill will be removed.'),
+                                          actions: [
+                                            TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                ctx.read<AdminProvider>().deleteStoreCategory(cat.id);
+                                                Navigator.pop(c);
+                                              },
+                                              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                              child: const Text('Delete', style: TextStyle(color: Colors.white)),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  )
+                                else
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      'Default',
+                                      style: TextStyle(fontSize: 9, color: Colors.grey),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogCtx),
+                child: const Text('Close'),
               ),
             ],
           );

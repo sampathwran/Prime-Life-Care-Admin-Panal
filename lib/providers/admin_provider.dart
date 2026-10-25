@@ -10,6 +10,7 @@ import '../models/clinical_log_model.dart';
 import '../models/user_model.dart';
 import '../models/review_model.dart';
 import '../models/gallery_item_model.dart';
+import '../models/store_category_model.dart';
 
 class AdminProvider extends ChangeNotifier {
   int _selectedNavIndex = 0;
@@ -47,6 +48,7 @@ class AdminProvider extends ChangeNotifier {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _reviewsSubscription;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _gallerySubscription;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _medicalItemsSubscription;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _storeCategoriesSubscription;
   bool _isFirebaseConnected = false;
   bool get isFirebaseConnected => _isFirebaseConnected;
 
@@ -259,6 +261,26 @@ class AdminProvider extends ChangeNotifier {
         }
       }, onError: (err) {
         debugPrint('[AdminProvider] Firestore medical_items listen warning: $err');
+      });
+
+      // 11. Listen to Real-Time Store Categories (Dynamic Product Categories)
+      _storeCategoriesSubscription = firestore
+          .collection('store_categories')
+          .snapshots()
+          .listen((snapshot) {
+        _isFirebaseConnected = true;
+        if (snapshot.docs.isNotEmpty) {
+          _storeCategories = snapshot.docs.map((doc) {
+            return StoreCategoryModel.fromMap(doc.data(), doc.id);
+          }).toList();
+          _storeCategories.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+          notifyListeners();
+        } else {
+          // If empty, auto-seed rich defaults
+          _seedDefaultStoreCategoriesToFirestore();
+        }
+      }, onError: (err) {
+        debugPrint('[AdminProvider] Firestore store_categories listen warning: $err');
       });
     } catch (e) {
       debugPrint('[AdminProvider] Firebase init warning: $e');
@@ -2006,6 +2028,122 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
+  // ===================== DYNAMIC STORE CATEGORIES =====================
+  List<StoreCategoryModel> _storeCategories = _getDefaultStoreCategoriesList();
+  List<StoreCategoryModel> get storeCategories => _storeCategories;
+
+  static List<StoreCategoryModel> _getDefaultStoreCategoriesList() {
+    return [
+      StoreCategoryModel(
+        id: 'equipment',
+        nameEn: 'Hospital Beds & Equipment',
+        nameSi: 'රෝහල් ඇඳන් සහ උපකරණ',
+        isDefault: true,
+        sortOrder: 1,
+      ),
+      StoreCategoryModel(
+        id: 'mobility',
+        nameEn: 'Mobility & Wheelchairs',
+        nameSi: 'රෝද පුටු සහ ඇවිදීමේ උපකරණ',
+        isDefault: true,
+        sortOrder: 2,
+      ),
+      StoreCategoryModel(
+        id: 'hygiene',
+        nameEn: 'Hygiene & Adult Diapers',
+        nameSi: 'සනීපාරක්ෂාව සහ ඩයපර්ස්',
+        isDefault: true,
+        sortOrder: 3,
+      ),
+      StoreCategoryModel(
+        id: 'monitoring',
+        nameEn: 'Vitals & Diagnostics',
+        nameSi: 'ශරීර සෞඛ්‍ය පරීක්ෂක',
+        isDefault: true,
+        sortOrder: 4,
+      ),
+      StoreCategoryModel(
+        id: 'respiratory',
+        nameEn: 'Respiratory & Oxygen',
+        nameSi: 'ශ්වසන සහ ඔක්සිජන් උපකරණ',
+        isDefault: true,
+        sortOrder: 5,
+      ),
+      StoreCategoryModel(
+        id: 'orthopedic',
+        nameEn: 'Orthopedic Supports & Braces',
+        nameSi: 'විකලාංග ආධාරක සහ බැන්ඩේජ්',
+        isDefault: true,
+        sortOrder: 6,
+      ),
+    ];
+  }
+
+  Future<void> _seedDefaultStoreCategoriesToFirestore() async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final defaultList = _getDefaultStoreCategoriesList();
+      for (final cat in defaultList) {
+        await firestore
+            .collection('store_categories')
+            .doc(cat.id)
+            .set(cat.toMap(), SetOptions(merge: true));
+      }
+      debugPrint('[AdminProvider] Seeded default store categories to Firestore.');
+    } catch (e) {
+      debugPrint('[AdminProvider] _seedDefaultStoreCategoriesToFirestore error: $e');
+    }
+  }
+
+  Future<void> addStoreCategory(StoreCategoryModel category) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('store_categories')
+          .doc(category.id)
+          .set(category.toMap(), SetOptions(merge: true));
+      final idx = _storeCategories.indexWhere((c) => c.id == category.id);
+      if (idx == -1) {
+        _storeCategories.add(category);
+      } else {
+        _storeCategories[idx] = category;
+      }
+      _storeCategories.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[AdminProvider] addStoreCategory error: $e');
+    }
+  }
+
+  Future<void> updateStoreCategory(StoreCategoryModel category) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('store_categories')
+          .doc(category.id)
+          .set(category.toMap(), SetOptions(merge: true));
+      final idx = _storeCategories.indexWhere((c) => c.id == category.id);
+      if (idx != -1) {
+        _storeCategories[idx] = category;
+        _storeCategories.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('[AdminProvider] updateStoreCategory error: $e');
+    }
+  }
+
+  Future<void> deleteStoreCategory(String categoryId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('store_categories')
+          .doc(categoryId)
+          .delete();
+      _storeCategories.removeWhere((c) => c.id == categoryId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[AdminProvider] deleteStoreCategory error: $e');
+    }
+  }
+
   // ===================== REAL-TIME ORDERS & RENTALS =====================
   List<OrderModel> _orders = [];
   List<OrderModel> get orders => _orders;
@@ -2473,6 +2611,7 @@ class AdminProvider extends ChangeNotifier {
     _reviewsSubscription?.cancel();
     _gallerySubscription?.cancel();
     _medicalItemsSubscription?.cancel();
+    _storeCategoriesSubscription?.cancel();
     super.dispose();
   }
 }
