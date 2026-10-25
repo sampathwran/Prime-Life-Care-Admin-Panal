@@ -46,6 +46,7 @@ class AdminProvider extends ChangeNotifier {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _servicesSubscription;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _reviewsSubscription;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _gallerySubscription;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _medicalItemsSubscription;
   bool _isFirebaseConnected = false;
   bool get isFirebaseConnected => _isFirebaseConnected;
 
@@ -239,6 +240,25 @@ class AdminProvider extends ChangeNotifier {
         }
       }, onError: (err) {
         debugPrint('[AdminProvider] Firestore gallery listen warning: $err');
+      });
+
+      // 10. Listen to Real-Time Medical Items (Auto-sync with Web Store)
+      _medicalItemsSubscription = firestore
+          .collection('medical_items')
+          .snapshots()
+          .listen((snapshot) {
+        _isFirebaseConnected = true;
+        if (snapshot.docs.isNotEmpty) {
+          _medicalItems = snapshot.docs.map((doc) {
+            return MedicalItemModel.fromMap(doc.data(), doc.id);
+          }).toList();
+          notifyListeners();
+        } else {
+          // Auto-seed single authentic product to Firestore
+          _seedDefaultStoreProductToFirestore();
+        }
+      }, onError: (err) {
+        debugPrint('[AdminProvider] Firestore medical_items listen warning: $err');
       });
     } catch (e) {
       debugPrint('[AdminProvider] Firebase init warning: $e');
@@ -1866,85 +1886,123 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
-  // ===================== STORE INVENTORY =====================
-  final List<MedicalItemModel> _medicalItems = [
-    MedicalItemModel(
-      id: 'med_01',
-      nameEn: 'Electric 3-Function Hospital Bed',
-      nameSi: 'Electric 3-Function Hospital Bed',
-      category: 'equipment',
-      buyPriceLKR: 185000,
-      canRent: true,
-      monthlyRentLKR: 14000,
-      securityDepositLKR: 20000,
-      stock: 5,
-      imageUrls: ['https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=800'],
-      description: 'Fully motorized electric home hospital bed with remote control, mattress, and side rails.',
-    ),
-    MedicalItemModel(
-      id: 'med_02',
-      nameEn: 'Philips EverFlo 5L Oxygen Concentrator',
-      nameSi: 'Philips EverFlo 5L Oxygen Concentrator',
-      category: 'equipment',
-      buyPriceLKR: 245000,
-      canRent: true,
-      monthlyRentLKR: 22000,
-      securityDepositLKR: 30000,
-      stock: 3,
-      imageUrls: ['https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?auto=format&fit=crop&q=80&w=800'],
-      description: 'Continuous medical oxygen delivery unit for respiratory patients.',
-    ),
-    MedicalItemModel(
-      id: 'med_03',
-      nameEn: 'Foldable Lightweight Wheelchair',
-      nameSi: 'Foldable Lightweight Wheelchair',
-      category: 'mobility',
-      buyPriceLKR: 42000,
-      canRent: true,
-      monthlyRentLKR: 6500,
-      securityDepositLKR: 10000,
-      stock: 8,
-      imageUrls: ['https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=800'],
-      description: 'Durable chrome-plated foldable transit wheelchair with safety brakes and footrests.',
-    ),
-    MedicalItemModel(
-      id: 'med_04',
-      nameEn: 'Adult Diapers Care Pack (Pack of 10 - Large)',
-      nameSi: 'Adult Diapers Care Pack (Pack of 10 - Large)',
-      category: 'hygiene',
-      buyPriceLKR: 2850,
-      canRent: false,
-      stock: 35,
-      imageUrls: ['https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=800'],
-      description: 'High-absorbency leakage-proof adult care diapers with wetness indicator.',
-    ),
-  ];
-
+  // ===================== STORE INVENTORY (REAL-TIME SYNCED) =====================
+  List<MedicalItemModel> _medicalItems = _getDefaultMedicalItemsList();
   List<MedicalItemModel> get medicalItems => _medicalItems;
 
-  void addMedicalItem(MedicalItemModel item) {
-    _medicalItems.add(item);
-    notifyListeners();
+  static List<MedicalItemModel> _getDefaultMedicalItemsList() {
+    return [
+      MedicalItemModel(
+        id: 'prod_icu_bed_3f',
+        nameEn: '3-Function Motorized Electric ICU & Home Care Hospital Bed',
+        nameSi: '3-Function විදුලි මෝටර් පාලිත උසස් ICU සහ නිවසේ රෝගී සත්කාරක ඇඳ',
+        category: 'equipment',
+        regularPriceLKR: 215000,
+        salePriceLKR: 185000,
+        canRent: true,
+        monthlyRentLKR: 18500,
+        securityDepositLKR: 25000,
+        stock: 6,
+        discountPercentage: 14,
+        brand: 'Paramount Healthcare',
+        badge: '14% OFF • Essential ICU Grade',
+        imageUrls: [
+          'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=1200',
+          'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=1200',
+          'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&q=80&w=1200',
+          'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?auto=format&fit=crop&q=80&w=1200',
+          'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=1200',
+        ],
+        description:
+            'Hospital-grade 3-function motorized electric care bed engineered for patient recovery and home nursing. Features remote-controlled backrest tilt (0-75°), knee elevation (0-45°), collapsible aluminum alloy side safety rails, central lockable medical castors, and emergency manual release.',
+      ),
+    ];
   }
 
-  void updateMedicalItem(MedicalItemModel item) {
-    final idx = _medicalItems.indexWhere((m) => m.id == item.id);
-    if (idx != -1) {
-      _medicalItems[idx] = item;
-      notifyListeners();
+  Future<void> _seedDefaultStoreProductToFirestore() async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final defaultList = _getDefaultMedicalItemsList();
+      for (final item in defaultList) {
+        await firestore
+            .collection('medical_items')
+            .doc(item.id)
+            .set(item.toMap(), SetOptions(merge: true));
+      }
+      debugPrint('[AdminProvider] Seeded single authentic product to Firestore medical_items.');
+    } catch (e) {
+      debugPrint('[AdminProvider] _seedDefaultStoreProductToFirestore error: $e');
     }
   }
 
-  void deleteMedicalItem(String itemId) {
-    _medicalItems.removeWhere((m) => m.id == itemId);
-    notifyListeners();
+  Future<void> seedDefaultStoreProduct() async {
+    await _seedDefaultStoreProductToFirestore();
   }
 
-  void updateItemStock(String itemId, int newStock) {
-    final idx = _medicalItems.indexWhere((m) => m.id == itemId);
-    if (idx != -1) {
-      _medicalItems[idx] = _medicalItems[idx].copyWith(stock: newStock);
+  Future<void> addMedicalItem(MedicalItemModel item) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('medical_items')
+          .doc(item.id)
+          .set(item.toMap());
+      final idx = _medicalItems.indexWhere((m) => m.id == item.id);
+      if (idx == -1) {
+        _medicalItems.add(item);
+      } else {
+        _medicalItems[idx] = item;
+      }
       notifyListeners();
+    } catch (e) {
+      debugPrint('[AdminProvider] addMedicalItem error: $e');
+    }
+  }
+
+  Future<void> updateMedicalItem(MedicalItemModel item) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('medical_items')
+          .doc(item.id)
+          .set(item.toMap(), SetOptions(merge: true));
+      final idx = _medicalItems.indexWhere((m) => m.id == item.id);
+      if (idx != -1) {
+        _medicalItems[idx] = item;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('[AdminProvider] updateMedicalItem error: $e');
+    }
+  }
+
+  Future<void> deleteMedicalItem(String itemId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('medical_items')
+          .doc(itemId)
+          .delete();
+      _medicalItems.removeWhere((m) => m.id == itemId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[AdminProvider] deleteMedicalItem error: $e');
+    }
+  }
+
+  Future<void> updateItemStock(String itemId, int newStock) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('medical_items')
+          .doc(itemId)
+          .set({
+        'stock': newStock,
+        'inStock': newStock > 0,
+        'updatedAt': DateTime.now().toIso8601String(),
+      }, SetOptions(merge: true));
+      final idx = _medicalItems.indexWhere((m) => m.id == itemId);
+      if (idx != -1) {
+        _medicalItems[idx] = _medicalItems[idx].copyWith(stock: newStock);
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('[AdminProvider] updateItemStock error: $e');
     }
   }
 
@@ -2414,6 +2472,7 @@ class AdminProvider extends ChangeNotifier {
     _servicesSubscription?.cancel();
     _reviewsSubscription?.cancel();
     _gallerySubscription?.cancel();
+    _medicalItemsSubscription?.cancel();
     super.dispose();
   }
 }
